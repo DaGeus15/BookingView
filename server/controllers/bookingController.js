@@ -147,7 +147,7 @@ export const stripePayment = async (req, res) => {
     const roomData = await Room.findById(booking.room).populate('hotel');
     const totalPrice = booking.totalPrice;
     const {origin} = req.headers;
-    const stripeInstamnce = new stripe(process.env.STRIPE_SECRET_KEY);
+    const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
 
     const line_items=[
       {
@@ -162,7 +162,7 @@ export const stripePayment = async (req, res) => {
       }
     ]
     //Create Checkout Session
-    const session = await stripeInstamnce.checkout.sessions.create({
+    const session = await stripeInstance.checkout.sessions.create({
       line_items,
       mode: "payment",
       success_url:`${origin}/loader/my-bookings`,
