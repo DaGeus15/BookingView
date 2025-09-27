@@ -10,6 +10,7 @@ import { clerkMiddleware } from "@clerk/express";
 import clerkWebhooks from "./controllers/clerkWebhooks.js";
 import connectCloudinary from "./config/cloudinary.js";
 import bookingRouter from "./routes/bookingRoutes.js";
+import { stripeWebhooks } from "./controllers/stripeWebhooks.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +18,9 @@ connectDB();
 connectCloudinary();
 
 const allowedOrigins = ["http://localhost:5173"];
+
+//Api to listen to Stripe Webhooks
+app.post('/api/stripe',express.raw({type: "application/json"}),stripeWebhooks)
 
 app.use(cookieParser());
 app.use(
