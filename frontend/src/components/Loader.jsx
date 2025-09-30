@@ -3,8 +3,7 @@ import { useAppContext } from '../context/appContext'
 import { useParams } from 'react-router-dom'
 
 const Loader = () => {
-  const appContext = useAppContext()
-  const navigate = appContext.navigate
+  const {navigate}= useAppContext();
   const { nextUrl } = useParams()
 
   useEffect(() => {

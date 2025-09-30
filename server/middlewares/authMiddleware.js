@@ -1,7 +1,6 @@
 import User from "../models/User.js";
 import { clerkClient } from "@clerk/clerk-sdk-node";
 
-console.log("CLERK_SECRET_KEY:", process.env.CLERK_SECRET_KEY);
 export const protect = async (req, res, next) => {
   try {
     console.log("=== Clerk auth data ===");
