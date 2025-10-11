@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Title from '../../components/Title'
 import { assets } from '../../assets/assets'
-import { useAppContext } from '../../context/appContext'
+import { useAppContext } from '../../context/AppContext'
 
 const Dashboard = () => {
 
@@ -35,7 +35,7 @@ const Dashboard = () => {
 
     return (
         <div>
-            <Title align='left' font='outfit' title='Dashboard' subTitle='Monitor you room listings, track bookings and analyze revenue-all in one place. Stay updated with real-time insights to ensure smooth operations.' />
+        <Title align='left' font='outfit' title='Dashboard' subTitle='Monitor you room listings, track bookings and analyze revenue-all in one place. Stay updated with real-time insights to ensure smooth operations.' />
             <div className='flex gap-4 my-8'>
                 {/* Total Bookings */}
                 <div className='bg-primary/3 border border-primary/10 rounded flex p-4 pr-8'>

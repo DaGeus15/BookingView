@@ -80,7 +80,7 @@ export const createBooking = async (req, res) => {
       const mailOptions = {
         from: process.env.SENDER_EMAIL,
         to: req.user.email,
-        subject: "Hotels Booking Details",
+        subject: "Property Booking Details",
         // text: "Hello world?", // plain‑text body
         html: `
           <h2>Your Booking Details</h2>
@@ -88,7 +88,7 @@ export const createBooking = async (req, res) => {
           <p> Thank you for your booking! Here are your details:</p>
           <ul>
             <li><strong>Booking ID:</strong> ${booking._id}</li>
-            <li><strong>Hotel Name:</strong> ${roomData.hotel.name}</li>
+            <li><strong>Property Name:</strong> ${roomData.hotel.name}</li>
             <li><strong>Location:</strong> ${roomData.hotel.address}</li>
             <li><strong>Date:</strong> ${booking.checkInDate.toDateString()}</li>
             <li><strong>Booking Amount:</strong> ${process.env.CURRENCY ||
@@ -102,7 +102,7 @@ export const createBooking = async (req, res) => {
 
     res.json({ success: true, message: "Booking created successfully", booking });
   } catch (error) {
-    console.error("🔥 Error in createBooking:", error);
+    console.error(" Error in createBooking:", error);
     res.json({ success: false, message: "Failed to create booking" });
   }
 };

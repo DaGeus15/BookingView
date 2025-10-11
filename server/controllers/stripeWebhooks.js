@@ -16,7 +16,7 @@ export const stripeWebhooks = async (req, res) => {
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (error) {
-    console.error("❌ Webhook signature error:", error.message);
+    console.error(" Webhook signature error:", error.message);
     return res.status(400).send(`Webhook Error: ${error.message}`);
   }
 
@@ -31,7 +31,7 @@ export const stripeWebhooks = async (req, res) => {
     });
 
     if (!sessions.data.length) {
-      console.error("❌ No session found for payment:", paymentIntentId);
+      console.error(" No session found for payment:", paymentIntentId);
       return res.json({ received: true });
     }
 
@@ -71,14 +71,14 @@ export const stripeWebhooks = async (req, res) => {
               </ul>
             `,
           });
-          console.log("✅ Email sent!");
+          console.log(" Email sent!");
         } catch (err) {
-          console.error("❌ Error sending email:", err.message);
+          console.error(" Error sending email:", err.message);
         }
       }
     }
   } else {
-    console.log("⚠️ Unhandled event:", event.type);
+    console.log(" Unhandled event:", event.type);
   }
 
   res.json({ received: true });

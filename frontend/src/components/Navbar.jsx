@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { assets } from "../assets/assets";
 import { Link, useLocation } from "react-router-dom";
 import { useClerk, UserButton, } from "@clerk/clerk-react";
-import { useAppContext } from "../context/appContext";
+import { useAppContext } from "../context/AppContext";
 
 
 const BookIcon = () => (
@@ -73,7 +73,7 @@ const Navbar = () => {
                 ))}
               { user && (
                 <button className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${isScrolled ? 'text-black' : 'text-white'} transition-all`} onClick={() => isOwner ? navigate('/owner'): setShowHotelReg(true)}>
-                   {isOwner ? 'Dasboard' : 'List Your Hotel'}
+                   {isOwner ? 'Dasboard' : 'List Your Property'}
                 </button>
             )}
             </div>
@@ -96,7 +96,7 @@ const Navbar = () => {
                     )
                     :
                     (<button onClick={openSignIn} className={`px-8 py-2.5 rounded-full ml-4 transition-all duration-500 ${isScrolled ? "text-white bg-black" : "bg-white text-black"} cursor-pointer hover:animate-pop `}>
-                        Login
+                        Sign In
                     </button>)
                 }
             </div>

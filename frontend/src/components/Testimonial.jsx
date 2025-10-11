@@ -7,7 +7,7 @@ const Testimonial = () => {
     <div className="flex flex-col items-center px-6 md:px-16 lg:px-24 bg-slate-50 pt-20 pb-30">
       <Title
         title="What Our Guests Say"
-        subTitle="Discover why discerning travelers consistently choose BookingView for their exclusive and lusurious accommodations around the world. "
+        subTitle="Discover why discerning travelers consistently choose BookingView for their exclusive and comfortable accommodations worldwide."
       />
 
       <div className="grid gap-12 text-center md:grid-cols-2 mt-10">

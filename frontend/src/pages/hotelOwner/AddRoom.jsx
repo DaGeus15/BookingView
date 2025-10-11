@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import Title from '../../components/Title';
 import { assets } from '../../assets/assets';
 import toast from 'react-hot-toast';
-import { useAppContext } from '../../context/appContext';
+import { useAppContext } from '../../context/AppContext';
 
 const AddRoom = () => {
 
@@ -87,7 +87,7 @@ const AddRoom = () => {
 
   return (
     <form onSubmit={onSubmitHandler} >
-      <Title align='left' font='outfit' title='Add Room' subTitle='Fill in the details carefully and accurate room details, pricing, and amenities, to enhace the user booking experience' />
+    <Title align='left' font='outfit' title='Add Room' subTitle='Fill in the details carefully and accurate room details, pricing, and amenities, to enhace the user booking experience' />
       {/* Upload Area for Images */}
       <p className='text-gray-800 mt-10'>Images</p>
       <div className='grid grid-cols-2 sm:flex gap-4 my-2 flex-wrap'>

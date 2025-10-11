@@ -3,7 +3,7 @@ import { assets, cities } from "../assets/assets";
 import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
-import { useAppContext } from "../context/appContext";
+import { useAppContext } from "../context/AppContext";
 
 const Hero = () => {
   const { navigate, getToken, axios, setSearchedCities } = useAppContext();
@@ -75,18 +75,15 @@ const Hero = () => {
 
   return (
     <div className='flex flex-col items-start justify-center px-6 md:px-16 lg:px-24 xl:px-32 text-white bg-[url("/src/assets/heroImage.png")] bg-no-repeat bg-cover bg-center h-screen'>
-      <p className="bg-primary/50 px-3.5 py-1 rounded-full mt-20">
-        belongs anywhere
-      </p>
-      <h1 className="font-playfair text-2xl md:text-6xl md:leading-[56px] font-bold md:font-extrabold max-w-xl mt-4">
-        Comfort like at home
-      </h1>
-      <p>
-        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sint neque
-        animi beatae expedita ut nam. Tenetur temporibus unde necessitatibus
-        officiis harum sit quisquam, quibusdam provident dolore, laborum nihil
-        quod quidem.
-      </p>
+    <p className="bg-primary/50 px-3.5 py-1 rounded-full mt-20">
+        Booking made easy
+    </p>
+    <h1 className="font-playfair text-2xl md:text-6xl md:leading-[56px] font-bold md:font-extrabold max-w-xl mt-4">
+        Find and Book Your Perfect Stay
+    </h1>
+    <p>
+        Discover and reserve your ideal accommodation in just a few clicks. Secure, fast, and convenient for both guests and property owners.
+    </p>
 
       <form
         className="bg-white text-gray-500 rounded-lg px-6 py-4 flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto mt-8"
