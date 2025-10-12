@@ -1,97 +1,132 @@
-import React, { useEffect, useState } from 'react'
-import Title from '../../components/Title'
-import { assets } from '../../assets/assets'
-import { useAppContext } from '../../context/AppContext'
+import React, { useEffect, useState } from "react";
+import Title from "../../components/Title";
+import { assets } from "../../assets/assets";
+import { useAppContext } from "../../context/AppContext";
+import toast from "react-hot-toast";
 
 const Dashboard = () => {
+  const { currency, user, getToken, axios } = useAppContext();
+  const [dashboardData, setDashboardData] = useState({
+    bookings: [],
+    totalBookings: 0,
+    totalRevenue: 0,
+  });
 
-    const {currency, user, getToken, toast, axios} = useAppContext();
-
-    const [dashboardData, setDashboardData] = useState({
-        bookings:[],
-        totalBookings: 0,
-        totalRevenue: 0
-    })
-
-    const fecthDashboardData = async () => {
-        try {
-            const {data} = await axios.get('/api/bookings/hotel',{
-                headers: { Authorization: `Bearer ${await getToken()}` }})
-            if(data.success){
-                setDashboardData(data.dashboardData);
-            }else{
-                toast.error(data.message);
-            }
-        } catch (error) {
-            toast.error(error.message);
-        }
+  const fetchDashboardData = async () => {
+    try {
+      const { data } = await axios.get("/api/bookings/hotel", {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+      if (data.success) {
+        setDashboardData(data.dashboardData);
+      } else toast.error(data.message);
+    } catch (error) {
+      toast.error(error.message);
     }
+  };
 
-    useEffect(() => {
-        if(user){
-            fecthDashboardData();
-        }
-    }, [user])
+  useEffect(() => {
+    if (user) fetchDashboardData();
+  }, [user]);
 
-    return (
-        <div>
-        <Title align='left' font='outfit' title='Dashboard' subTitle='Monitor you room listings, track bookings and analyze revenue-all in one place. Stay updated with real-time insights to ensure smooth operations.' />
-            <div className='flex gap-4 my-8'>
-                {/* Total Bookings */}
-                <div className='bg-primary/3 border border-primary/10 rounded flex p-4 pr-8'>
-                    <img src={assets.totalBookingIcon} alt="" className='max-sm:hidden h-10' />
-                    <div className='flex flex-col sm:ml-4 font-medium'>
-                        <p className='text-blue-500 text-lg'>Total Bookings</p>
-                        <p className='text-neutral-400 text-base'>{dashboardData.totalBookings}</p>
-                    </div>
-                </div>
+  return (
+    <div className="space-y-10">
+      <Title
+        align="left"
+        font="outfit"
+        title="Dashboard"
+        subTitle="Monitor your room listings, track bookings and analyze revenue—all in one place. Stay updated with real-time insights."
+      />
 
-                {/* Total Revenue */}
-                <div className='bg-primary/3 border border-primary/10 rounded flex p-4 pr-8'>
-                    <img src={assets.totalRevenueIcon} alt="" className='max-sm:hidden h-10' />
-                    <div className='flex flex-col sm:ml-4 font-medium'>
-                        <p className='text-blue-500 text-lg'>Total Revenue</p>
-                        <p className='text-neutral-400 text-base'>{currency} {dashboardData.totalRevenue}</p>
-                    </div>
-                </div>
-
-            </div>
-            {/* Recent Bookings */}
-            <h2 className='text-xl text-blue-950/ font-medium mb-5'>Recent Bookings</h2>
-            <div className='w-full max-w-3xl text-left border border-gray-300 rounded-lg max-h-80 overflow-y-scroll'>
-                <table className='w-full'>
-                    <thead className='bg-gray-50'>
-                        <tr>
-                            <th className='py-3 px-4 text-gray- font-medium'>User Name</th>
-                            <th className='py-3 px-4 text-gray- font-medium max-sm:hidden'>Room Name</th>
-                            <th className='py-3 px-4 text-gray- font-medium text-center'>Total Amount</th>
-                            <th className='py-3 px-4 text-gray- font-medium text-center'>Payment Status</th>
-                        </tr>
-                    </thead>
-                    <tbody className='text-sm'>
-                        {dashboardData.bookings.map((item, index) => (
-                            <tr key={index}>
-                                <td className='py-3 px-4 text-gray-700  border-t border-gray-300'>
-                                    {item.user.username}
-                                </td>
-                                <td className='py-3 px-4 text-gray-700  border-t border-gray-300 max-sm:hidden'>
-                                    {item.room.roomType}
-                                </td>
-                                <td className='py-3 px-4 text-gray-700  border-t border-gray-300 text-center'>
-                                    {currency} {item.totalPrice}
-                                </td>
-                                <td className='py-3 px-4 border-t border-gray-300 flex'>
-                                    <button className={`py-1 px-3 text-xs rounded-full mx-auto ${item.isPaid ? 'bg-green-200 text-green-600' : 'bg-amber-200 text-yellow-600'}`}>
-                                        {item.isPaid ? 'Completed' : 'Pending'}
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="flex items-center bg-gradient-to-r from-cyan-100 to-blue-50 shadow-md rounded-lg p-4 transition hover:shadow-xl">
+          <img
+            src={assets.totalBookingIcon}
+            alt=""
+            className="h-12 w-12 mr-4"
+          />
+          <div className="flex flex-col">
+            <p className="text-blue-600 font-semibold text-lg">
+              Total Bookings
+            </p>
+            <p className="text-gray-600 font-medium text-xl">
+              {dashboardData.totalBookings}
+            </p>
+          </div>
         </div>
-    )
-}
 
-export default Dashboard
+        <div className="flex items-center bg-gradient-to-r from-green-100 to-teal-50 shadow-md rounded-lg p-4 transition hover:shadow-xl">
+          <img
+            src={assets.totalRevenueIcon}
+            alt=""
+            className="h-12 w-12 mr-4"
+          />
+          <div className="flex flex-col">
+            <p className="text-green-600 font-semibold text-lg">
+              Total Revenue
+            </p>
+            <p className="text-gray-600 font-medium text-xl">
+              {currency} {dashboardData.totalRevenue}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Bookings Table */}
+      <div>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">
+          Recent Bookings
+        </h2>
+        <div className="overflow-x-auto shadow rounded-lg border border-gray-200">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                  User Name
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 hidden sm:table-cell">
+                  Room Name
+                </th>
+                <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">
+                  Total Amount
+                </th>
+                <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">
+                  Payment Status
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {dashboardData.bookings.map((item, idx) => (
+                <tr key={idx} className="hover:bg-gray-50 transition">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {item.user.username}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+                    {item.room.roomType}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    {currency} {item.totalPrice}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                        item.isPaid
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {item.isPaid ? "Completed" : "Pending"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
