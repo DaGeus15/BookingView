@@ -15,6 +15,7 @@ export const AppProvider = ({ children }) => {
   const { getToken, signOut } = useAuth();
 
   const [isOwner, setIsOwner] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [showHotelReg, setShowHotelReg] = useState(false);
   const [searchedCities, setSearchedCities] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -38,16 +39,16 @@ export const AppProvider = ({ children }) => {
 
       if (data.success) {
         setIsOwner(data.role === "hotelOwner");
+        setIsAdmin(data.role === "admin");
         setSearchedCities(data.recentSearchedCities);
-        // toast.success("Usuario autenticado correctamente");
       } else {
         toast.error(" Usuario no válido o inactivo, cerrando sesión...");
         setTimeout(async () => {
           await signOut();
-        }, 3000); 
+        }, 3000);
       }
     } catch (error) {
-      toast.error((error.response?.data?.message || error.message));
+      toast.error(error.response?.data?.message || error.message);
       setTimeout(async () => {
         await signOut();
       }, 2000);
@@ -77,6 +78,7 @@ export const AppProvider = ({ children }) => {
     setSearchedCities,
     rooms,
     setRooms,
+    isAdmin,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

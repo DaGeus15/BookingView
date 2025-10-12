@@ -15,6 +15,13 @@ import { Toaster } from "react-hot-toast";
 import { useAppContext } from "./context/AppContext";
 import Loader from "./components/Loader";
 import FAQ from "./pages/FAQ";
+import AdminGuard from "./guards/adminGuard";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminHotels from "./pages/admin/AdminHotels";
+import AdminRooms from "./pages/admin/AdminRooms";
+import AdminBookings from "./pages/admin/AdminBookings";
 
 const App = () => {
   const isOwnerPath = useLocation().pathname.includes("owner");
@@ -24,7 +31,7 @@ const App = () => {
   return (
     <div>
       <Toaster />
-      {!isOwnerPath && <Navbar />}
+      {<Navbar />}
       {showHotelReg && <HotelReg />}
       {/* {false && <HotelReg />} */}
       <div className="min-h-[70vh]">
@@ -39,6 +46,20 @@ const App = () => {
             <Route index element={<Dashboard />} />
             <Route path="add-room" element={<AddRoom />} />
             <Route path="list-room" element={<ListRoom />} />
+          </Route>
+          <Route
+            path="/admin"
+            element={
+              <AdminGuard>
+                <AdminLayout />
+              </AdminGuard>
+            }
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="hotels" element={<AdminHotels />} />
+            <Route path="rooms" element={<AdminRooms />} />
+            <Route path="bookings" element={<AdminBookings />} />
           </Route>
         </Routes>
       </div>

@@ -50,8 +50,14 @@ export const getRooms = async (req, res) => {
 export const getOwnerRooms = async (req, res) => {
   try {
     const hotelData = await Hotel.findOne({ owner: req.auth.userId });
+    if (!hotelData)
+      return res.json({
+        success: false,
+        message: "No hotel found for this owner",
+      });
+
     const rooms = await Room.find({ hotel: hotelData._id.toString() }).select(
-      "roomType pricePerNight amenities isAvailable"
+      "roomType pricePerNight amenities isAvailable images"
     );
 
     res.json({ success: true, rooms });
@@ -79,6 +85,46 @@ export const toggleRoomAvailability = async (req, res) => {
       message: "Room availability updated",
       room: roomData,
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+// Editar habitación de owner
+export const updateRoomOwner = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const { roomType, pricePerNight, amenities } = req.body;
+
+    const room = await Room.findById(roomId);
+    if (!room)
+      return res
+        .status(404)
+        .json({ success: false, message: "Room not found" });
+
+    // Verificar que el owner es el dueño del hotel
+    const hotel = await Hotel.findById(room.hotel);
+    if (!hotel || hotel.owner.toString() !== req.auth.userId) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Actualizar datos
+    if (roomType) room.roomType = roomType;
+    if (pricePerNight) room.pricePerNight = +pricePerNight;
+    if (amenities) room.amenities = JSON.parse(amenities);
+
+    // Subida de nuevas imágenes si existen
+    if (req.files && req.files.length > 0) {
+      const uploadedImages = await Promise.all(
+        req.files.map((file) =>
+          cloudinary.uploader.upload(file.path).then((r) => r.secure_url)
+        )
+      );
+      room.images = uploadedImages;
+    }
+
+    await room.save();
+
+    res.json({ success: true, message: "Room updated successfully", room });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

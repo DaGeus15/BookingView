@@ -33,13 +33,6 @@ const Sidebar = () => {
           </NavLink>
         ))}
       </nav>
-
-      <div className="p-4 border-t border-gray-200 mt-auto">
-        <button className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-red-100 hover:text-red-600 text-gray-700 transition">
-          <img src={assets.logoutIcon} alt="Logout" className="h-5 w-5" />
-          <span className="md:block hidden font-medium">Logout</span>
-        </button>
-      </div>
     </div>
   );
 };

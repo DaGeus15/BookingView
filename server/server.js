@@ -14,6 +14,7 @@ import userRouter from "./routes/userRoutes.js";
 import hotelRouter from "./routes/hotelRoutes.js";
 import roomRouter from "./routes/roomRoutes.js";
 import bookingRouter from "./routes/bookingRoutes.js";
+import adminRouter from './routes/adminRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,6 +37,8 @@ app.use("/api/user", userRouter);
 app.use("/api/hotel", hotelRouter);
 app.use("/api/rooms", roomRouter);
 app.use("/api/bookings", bookingRouter);
+app.use('/api/admin', adminRouter);
+
 
 syncUsers()
   .then(() => console.log("✅ Sincronización inicial completa"))

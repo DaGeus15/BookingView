@@ -43,10 +43,6 @@ const HotelCard = ({ room, index }) => {
               >
                 {room.hotel.name}
               </CardItem>
-
-              <div className="flex items-center gap-1">
-                <img src={assets.starIconFilled} alt="star-icon" /> 4.5
-              </div>
             </div>
 
             <div className="flex items-center gap-1 text-sm mt-1 text-gray-600">
