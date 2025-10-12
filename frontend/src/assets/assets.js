@@ -75,10 +75,16 @@ export const assets = {
 }
 
 export const cities = [
-    "Dubai",
-    "Singapore",
-    "New York",
-    "London",
+    "Ambato",
+    "Quito",
+    "Guayaquil",
+    "Cuenca",
+    "Manta",
+    "Baños de Agua Santa",
+    "Salinas",
+    "Loja",
+    "Riobamba",
+    "Ibarra",
 ];
 
 // Exclusive Offers Dummy Data

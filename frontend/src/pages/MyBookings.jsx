@@ -1,56 +1,54 @@
 import React, { useEffect, useState } from "react";
 import Title from "../components/Title";
-import { assets  } from "../assets/assets";
-import { useAppContext } from "../context/appContext";
+import { assets } from "../assets/assets";
+import { useAppContext } from "../context/AppContext";
 import { el } from "date-fns/locale";
 import toast from "react-hot-toast";
 import { data } from "react-router-dom";
 
 const MyBookings = () => {
-  const {axios, getToken, user}= useAppContext();
+  const { axios, getToken, user } = useAppContext();
   const [bookings, setBookings] = useState([]);
-
 
   const fetchUserBookings = async () => {
     try {
-      const {data} = await axios.get('/api/bookings/user',{
-        headers:{
-          Authorization: `Bearer ${await getToken()}`
-        }
+      const { data } = await axios.get("/api/bookings/user", {
+        headers: {
+          Authorization: `Bearer ${await getToken()}`,
+        },
       });
-      if(data.success){
+      if (data.success) {
         setBookings(data.bookings);
-      }else{
+      } else {
         toast.error(data.message);
       }
-
     } catch (error) {
       toast.error(error.message);
     }
-  }
+  };
 
-const handlePayment=async(bookingId)=>{
-  try{
-    const {data} = await axios.post('/api/bookings/stripe-payment',{bookingId}, 
-      {headers:{Authorization: `Bearer ${await getToken()}`
-
-    }})
-    if(data.success){ 
-      window.location.href = data.url
-    }else{
-      toast.error(data.message)
+  const handlePayment = async (bookingId) => {
+    try {
+      const { data } = await axios.post(
+        "/api/bookings/stripe-payment",
+        { bookingId },
+        { headers: { Authorization: `Bearer ${await getToken()}` } }
+      );
+      if (data.success) {
+        window.location.href = data.url;
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
     }
+  };
 
-  }catch(error){
-    toast.error(error.message)
-  }
-}
-
-  useEffect(() => { 
-    if(user){   
+  useEffect(() => {
+    if (user) {
       fetchUserBookings();
     }
-      },[user])
+  }, [user]);
 
   return (
     <div className="py-28 md:pb-35 md:pt-32 px-4 md:px-16 lg:px-24 xl:px-32">
@@ -101,22 +99,41 @@ const handlePayment=async(bookingId)=>{
             <div>
               <div>
                 <p>Check-In:</p>
-                <p className="text-gray-500 text-sm">{new Date(booking.checkInDate).toDateString()}</p>
+                <p className="text-gray-500 text-sm">
+                  {new Date(booking.checkInDate).toDateString()}
+                </p>
               </div>
               <div>
                 <p>Check-Out</p>
-                <p className="text-gray-500 text-sm">{new Date(booking.checkOutDate).toDateString()}</p>
+                <p className="text-gray-500 text-sm">
+                  {new Date(booking.checkOutDate).toDateString()}
+                </p>
               </div>
             </div>
             {/* Payent Status */}
             <div className="flex flex-col items-start justify-center pt-3">
               <div className="flex items-center gap-2">
-                <div className={`h-3 w-3 rounded-full ${booking.isPaid ? "bg-green-500" : "bg-red-500"}`}></div>
-                <p className={`text-sm ${booking.isPaid ? "text-green-500" : "text-red-500"}`}>{booking.isPaid ? "Paid" : "Unpaid"}</p>
+                <div
+                  className={`h-3 w-3 rounded-full ${
+                    booking.isPaid ? "bg-green-500" : "bg-red-500"
+                  }`}
+                ></div>
+                <p
+                  className={`text-sm ${
+                    booking.isPaid ? "text-green-500" : "text-red-500"
+                  }`}
+                >
+                  {booking.isPaid ? "Paid" : "Unpaid"}
+                </p>
               </div>
-            {!booking.isPaid && (
-              <button onClick={(handlePayment(booking._id))} className="px-4 py-1.5 mt-4 text-xs border border-gray-400 rounded-full hover:bg-gray-50 transition-all cursor-pointer">Pay Now</button>
-            )}
+              {!booking.isPaid && (
+                <button
+                  onClick={() => handlePayment(booking._id)}
+                  className="px-4 py-1.5 mt-4 text-xs border border-gray-400 rounded-full hover:bg-gray-50 transition-all cursor-pointer"
+                >
+                  Pay Now
+                </button>
+              )}
             </div>
           </div>
         ))}

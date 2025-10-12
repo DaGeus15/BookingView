@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react"; 
+import React, { useState, useRef, useEffect } from "react";
 import { assets, cities } from "../assets/assets";
 import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css";
@@ -75,15 +75,16 @@ const Hero = () => {
 
   return (
     <div className='flex flex-col items-start justify-center px-6 md:px-16 lg:px-24 xl:px-32 text-white bg-[url("/src/assets/heroImage.png")] bg-no-repeat bg-cover bg-center h-screen'>
-    <p className="bg-primary/50 px-3.5 py-1 rounded-full mt-20">
+      <p className="bg-primary/50 px-3.5 py-1 rounded-full mt-20">
         Booking made easy
-    </p>
-    <h1 className="font-playfair text-2xl md:text-6xl md:leading-[56px] font-bold md:font-extrabold max-w-xl mt-4">
+      </p>
+      <h1 className="font-playfair text-2xl md:text-6xl md:leading-[56px] font-bold md:font-extrabold max-w-xl mt-4">
         Find and Book Your Perfect Stay
-    </h1>
-    <p>
-        Discover and reserve your ideal accommodation in just a few clicks. Secure, fast, and convenient for both guests and property owners.
-    </p>
+      </h1>
+      <p>
+        Discover and reserve your ideal accommodation in just a few clicks.
+        Secure, fast, and convenient for both guests and property owners.
+      </p>
 
       <form
         className="bg-white text-gray-500 rounded-lg px-6 py-4 flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto mt-8"
@@ -91,24 +92,23 @@ const Hero = () => {
       >
         <div>
           <div className="flex items-center gap-2">
-            <img src={assets.calenderIcon} alt="" className="h-4" />
+            <img src={assets.locationIcon} alt="" className="h-4" />
             <label htmlFor="destination">Destination</label>
           </div>
-          <input
-            list="destinations"
+          <select
             id="destination"
-            type="text"
-            placeholder="Type here"
-            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none"
+            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none w-full"
             required
             value={form.destination}
             onChange={handleChange}
-          />
-          <datalist id="destinations">
+          >
+            <option value="">Select a city</option>
             {cities.map((city, index) => (
-              <option value={city} key={index} />
+              <option key={index} value={city}>
+                {city}
+              </option>
             ))}
-          </datalist>
+          </select>
         </div>
 
         <div className="relative">

@@ -11,8 +11,6 @@ const Home = () => {
       <Hero/>
       <RecommendedHotels/>
       <FeauteredDestination/>
-      <ExcusiveOffers/>
-      <Testimonial/>
     </>
   )
 }

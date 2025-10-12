@@ -1,29 +1,38 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
-import { useAppContext } from "../context/appContext";
+import { useAppContext } from "../context/AppContext";
 
-import {
-  assets,
-  facilityIcons,
-  roomCommonData,
-} from "../assets/assets";
+import { assets, facilityIcons, roomCommonData } from "../assets/assets";
 import toast from "react-hot-toast";
 
 const RoomDetails = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+
+  const guests = Number(searchParams.get("guests") || 1);
+  const checkInStr = searchParams.get("checkIn");
+  const checkOutStr = searchParams.get("checkOut");
+
+  const checkIn = checkInStr ? new Date(checkInStr) : null;
+  const checkOut = checkOutStr ? new Date(checkOutStr) : null;
+
+  const nights =
+    checkIn && checkOut
+      ? Math.ceil(Math.abs(checkOut - checkIn) / (1000 * 60 * 60 * 24))
+      : 1;
   const { rooms, getToken, axios, navigate } = useAppContext();
   const [room, setRoom] = useState(null);
   const [mainImage, setMainImage] = useState(null);
-  const [guests, setGuests] = useState(1);
   const [isAvailable, setIsAvailable] = useState(false);
 
   // Date range state
   const [dateRange, setDateRange] = useState([
-    { startDate: null, endDate: null, key: "selection" },
+    { startDate: checkIn, endDate: checkOut, key: "selection" },
   ]);
+  const [guestsState, setGuestsState] = useState(guests);
   const [showCalendar, setShowCalendar] = useState(false);
   const [error, setError] = useState("");
   const calendarRef = useRef();
@@ -81,73 +90,71 @@ const RoomDetails = () => {
       });
 
       if (data.success) {
-          if (data.isAvailable) {
-              setIsAvailable(true);
-              toast.success("Room is available");
-          } else {
-              setIsAvailable(false);
-              toast.error("Room is not available");
-          }
-    // Solo mostrar si hay mensaje
-    if (data.message) toast(data.message);
-}
-
+        if (data.isAvailable) {
+          setIsAvailable(true);
+          toast.success("Room is available!");
+        } else {
+          setIsAvailable(false);
+          toast.error("Room is not available");
+        }
+        // Solo mostrar si hay mensaje
+        if (data.message) toast(data.message);
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || err.message);
     }
   };
 
-const onSubmitHandler = async (e) => {
-  e.preventDefault();
+  const onSubmitHandler = async (e) => {
+    e.preventDefault();
 
-  setError("");
+    setError("");
 
-  // Validar que haya fechas seleccionadas
-  if (!dateRange[0].startDate || !dateRange[0].endDate) {
-    setError("Select dates first");
-    return;
-  }
-
-  const days = getDayDifference();
-  if (days < 2) {
-    setError("⚠️ The minimum stay is 2 nights (3 days).");
-    return;
-  }
-
-  try {
-    if (!isAvailable) {
-      // Solo check availability
-      await checkAvailability();
+    // Validar que haya fechas seleccionadas
+    if (!dateRange[0].startDate || !dateRange[0].endDate) {
+      setError("Select dates first");
       return;
     }
 
-    // Si ya está disponible, crear reserva
-    const { data } = await axios.post(
-      "/api/bookings/book",
-      {
-        room: id,
-        dateRange,
-        guests,
-        paymentMethod: "Pay At Hotel",
-      },
-      {
-        headers: { Authorization: `Bearer ${await getToken()}` },
-      }
-    );
-
-    if (data.success) {
-      toast.success("Booking created successfully");
-      navigate("/my-bookings");
-      scrollTo(0, 0);
-      setIsAvailable(false); // Reset disponibilidad
-    } else {
-      toast.error(data.message);
+    const days = getDayDifference();
+    if (days < 2) {
+      setError("⚠️ The minimum stay is 2 nights (3 days).");
+      return;
     }
-  } catch (err) {
-    toast.error(err.response?.data?.message || err.message);
-  }
-};
 
+    try {
+      if (!isAvailable) {
+        // Solo check availability
+        await checkAvailability();
+        return;
+      }
+
+      // Si ya está disponible, crear reserva
+      const { data } = await axios.post(
+        "/api/bookings/book",
+        {
+          room: id,
+          dateRange,
+          guests,
+          paymentMethod: "Pay At Hotel",
+        },
+        {
+          headers: { Authorization: `Bearer ${await getToken()}` },
+        }
+      );
+
+      if (data.success) {
+        toast.success("Booking created successfully");
+        navigate("/my-bookings");
+        scrollTo(0, 0);
+        setIsAvailable(false); // Reset disponibilidad
+      } else {
+        toast.error(data.message);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message);
+    }
+  };
 
   return (
     room && (
@@ -158,9 +165,6 @@ const onSubmitHandler = async (e) => {
             {room.hotel.name}{" "}
             <span className="font-inter text-sm">({room.roomType})</span>
           </h1>
-          <p className="text-xs font-inter py-1.5 px-3 text-white bg-orange-500 rounded-full">
-            20% OFF
-          </p>
         </div>
 
         {/* Room Address */}
@@ -205,13 +209,21 @@ const onSubmitHandler = async (e) => {
                   key={index}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100"
                 >
-                  <img src={facilityIcons[item]} alt={item} className="w-5 h-5" />
+                  <img
+                    src={facilityIcons[item]}
+                    alt={item}
+                    className="w-5 h-5"
+                  />
                   <p className="text-xs">{item}</p>
                 </div>
               ))}
             </div>
           </div>
-          <p className="text-2xl font-medium">${room.pricePerNight}/night</p>
+          <p className="text-2xl font-medium">
+            ${room.pricePerNight * nights * guestsState} total ({guestsState}{" "}
+            guest{guestsState > 1 ? "s" : ""} • {nights} night
+            {nights > 1 ? "s" : ""})
+          </p>
         </div>
 
         {/* CheckIn CheckOut Form */}
@@ -261,15 +273,14 @@ const onSubmitHandler = async (e) => {
                 Guests
               </label>
               <input
-                onChange={(e) => setGuests(Number(e.target.value))}
-                value={guests}
+                onChange={(e) => setGuestsState(Number(e.target.value))}
+                value={guestsState}
                 type="number"
                 min={1}
                 max={4}
                 id="guests"
                 placeholder="1"
                 className="max-w-20 rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none"
-                required
               />
             </div>
           </div>
