@@ -14,7 +14,7 @@ const faqsData = [
   {
     question: "What payment methods are accepted?",
     answer:
-      "We accept credit/debit cards, PayPal, and Pay at Hotel where available.",
+      "We accept credit/debit cards, PayPal, and Pay at establishment where available.",
   },
   {
     question: "What are the check-in and check-out times?",
@@ -24,12 +24,12 @@ const faqsData = [
   {
     question: "Are there any special services included?",
     answer:
-      "Our rooms include free Wi-Fi, daily housekeeping, and complimentary toiletries. Additional services may be available depending on the hotel.",
+      "Our rooms include free Wi-Fi, daily housekeeping, and complimentary toiletries. Additional services may be available depending on the establishment.",
   },
   {
     question: "Can I bring pets?",
     answer:
-      "Pet policies vary by hotel. Please check the specific room details or contact customer support.",
+      "Pet policies vary by establishment. Please check the specific room details or contact customer support.",
   },
 ];
 
