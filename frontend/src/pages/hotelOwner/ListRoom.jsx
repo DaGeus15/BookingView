@@ -4,16 +4,22 @@ import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
 
 const ListRoom = () => {
-  const [rooms, setRooms] = useState([]);
   const { axios, getToken, user, currency } = useAppContext();
+  const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
+
   const [formData, setFormData] = useState({
     roomType: "",
     pricePerNight: 0,
-    amenities: {},
-    images: [],
-    imagesPreview: [],
+    amenities: {
+      "Free Wifi": false,
+      "Free Breakfast": false,
+      "Room Service": false,
+      "Mountain View": false,
+      "Pool Access": false,
+    },
+    imagesData: [], // ahora dinámico
   });
 
   const fetchRooms = async () => {
@@ -46,6 +52,78 @@ const ListRoom = () => {
     }
   };
 
+  const handleEdit = (room) => {
+    setEditingRoom(room);
+
+    const imagesData = [
+      ...room.images.map((url) => ({ file: null, url })),
+      ...Array(Math.max(0, 4 - room.images.length)).fill({
+        file: null,
+        url: "/placeholder.png",
+      }),
+    ];
+
+    setFormData({
+      roomType: room.roomType,
+      pricePerNight: room.pricePerNight,
+      amenities: {
+        "Free Wifi": room.amenities.includes("Free Wifi"),
+        "Free Breakfast": room.amenities.includes("Free Breakfast"),
+        "Room Service": room.amenities.includes("Room Service"),
+        "Mountain View": room.amenities.includes("Mountain View"),
+        "Pool Access": room.amenities.includes("Pool Access"),
+      },
+      imagesData,
+    });
+  };
+
+  const handleRemoveImage = (index) => {
+  setFormData((prev) => ({
+    ...prev,
+    imagesData: prev.imagesData.map((img, i) =>
+      i === index ? { file: null, url: "/placeholder.png" } : img
+    ),
+  }));
+};
+
+  const handleSubmitEdit = async (e) => {
+    e.preventDefault();
+    try {
+      const fd = new FormData();
+      fd.append("roomType", formData.roomType);
+      fd.append("pricePerNight", formData.pricePerNight);
+
+      const selectedAmenities = Object.keys(formData.amenities).filter(
+        (a) => formData.amenities[a]
+      );
+      fd.append("amenities", JSON.stringify(selectedAmenities));
+
+      formData.imagesData.forEach((img) => {
+        if (img.file) fd.append("images", img.file);
+      });
+
+      const existingImages = formData.imagesData
+        .filter((img) => !img.file && img.url !== "/placeholder.png")
+        .map((img) => img.url);
+
+      fd.append("existingImages", JSON.stringify(existingImages));
+
+      const { data } = await axios.put(
+        `/api/rooms/owner/${editingRoom._id}`,
+        fd,
+        { headers: { Authorization: `Bearer ${await getToken()}` } }
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+        fetchRooms();
+        setEditingRoom(null);
+      } else toast.error(data.message);
+    } catch (error) {
+      toast.error("Error updating room");
+    }
+  };
+
   useEffect(() => {
     if (user) fetchRooms();
   }, [user]);
@@ -56,10 +134,10 @@ const ListRoom = () => {
         align="left"
         font="outfit"
         title="Room Listings"
-        subTitle="Manage all your rooms, toggle availability, and keep information up-to-date for guests."
+        subTitle="Manage all your rooms, toggle availability, and edit details easily."
       />
 
-      {/* Desktop Table */}
+      {/* Tabla Desktop */}
       <div className="overflow-x-auto shadow-lg rounded-lg border border-gray-200 mt-4 hidden sm:block">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-100">
@@ -68,7 +146,7 @@ const ListRoom = () => {
                 Type
               </th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                Facility
+                Amenities
               </th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                 Price / Night
@@ -76,18 +154,21 @@ const ListRoom = () => {
               <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">
                 Availability
               </th>
+              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {loading ? (
               <tr>
-                <td colSpan={4} className="py-20 text-center">
-                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-600"></div>
+                <td colSpan={5} className="py-10 text-center">
+                  <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-300 border-t-blue-600"></div>
                 </td>
               </tr>
             ) : rooms.length === 0 ? (
               <tr>
-                <td colSpan={4} className="py-10 text-center text-gray-500">
+                <td colSpan={5} className="py-10 text-center text-gray-500">
                   No rooms found.
                 </td>
               </tr>
@@ -104,33 +185,17 @@ const ListRoom = () => {
                     {currency} {room.pricePerNight}
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <label className="inline-flex items-center cursor-pointer relative">
-                      <input
-                        type="checkbox"
-                        checked={room.isAvailable}
-                        onChange={() => toggleAvailability(room._id)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-14 h-8 bg-gray-300 rounded-full peer-checked:bg-blue-600 transition-colors duration-300"></div>
-                      <div className="absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ease-in-out peer-checked:translate-x-6"></div>
-                    </label>
+                    <input
+                      type="checkbox"
+                      checked={room.isAvailable}
+                      onChange={() => toggleAvailability(room._id)}
+                      className="w-5 h-5 accent-blue-600"
+                    />
                   </td>
                   <td className="px-6 py-4 text-center">
                     <button
-                      onClick={() => {
-                        setEditingRoom(room);
-                        setFormData({
-                          roomType: room.roomType,
-                          pricePerNight: room.pricePerNight,
-                          amenities: room.amenities.reduce(
-                            (acc, a) => ({ ...acc, [a]: true }),
-                            {}
-                          ),
-                          images: [], // archivos nuevos
-                          imagesPreview: room.images || [], // URLs existentes
-                        });
-                      }}
-                      className="px-3 py-1 bg-yellow-400 text-white rounded"
+                      onClick={() => handleEdit(room)}
+                      className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
                     >
                       Edit
                     </button>
@@ -142,122 +207,72 @@ const ListRoom = () => {
         </table>
       </div>
 
-      {/* Mobile Cards */}
-      <div className="grid grid-cols-1 sm:hidden gap-4 mt-6">
-        {loading ? (
-          <div className="py-20 flex justify-center">
-            <div className="w-12 h-12 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
-          </div>
-        ) : rooms.length === 0 ? (
-          <div className="py-10 text-center text-gray-500">No rooms found.</div>
-        ) : (
-          rooms.map((room) => (
-            <div
-              key={room._id}
-              className="p-4 bg-white shadow-md rounded-lg border border-gray-200"
-            >
-              <p className="font-semibold text-gray-800">{room.roomType}</p>
-              <p className="text-gray-600 text-sm">
-                {room.amenities.join(", ")}
-              </p>
-              <p className="text-gray-700 font-medium mt-1">
-                {currency} {room.pricePerNight}
-              </p>
-              <div className="flex justify-end mt-2">
-                <label className="inline-flex items-center cursor-pointer relative">
-                  <input
-                    type="checkbox"
-                    checked={room.isAvailable}
-                    onChange={() => toggleAvailability(room._id)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-14 h-8 bg-gray-300 rounded-full peer-checked:bg-blue-600 transition-colors duration-300"></div>
-                  <div className="absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ease-in-out peer-checked:translate-x-6"></div>
-                </label>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-      {/* Modal de edición */}
+      {/* Modal de Edición */}
       {editingRoom && (
-        <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50 overflow-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-auto">
           <div className="bg-white p-6 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">Edit Room</h2>
 
-            {/* Copia de AddRoom pero con formData */}
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                try {
-                  const fd = new FormData();
-                  fd.append("roomType", formData.roomType);
-                  fd.append("pricePerNight", formData.pricePerNight);
-                  const selectedAmenities = Object.keys(
-                    formData.amenities
-                  ).filter((a) => formData.amenities[a]);
-                  fd.append("amenities", JSON.stringify(selectedAmenities));
-
-                  // imágenes
-                  for (let i = 0; i < (formData.images?.length || 0); i++) {
-                    fd.append("images", formData.images[i]);
-                  }
-
-                  const { data } = await axios.put(
-                    `/api/rooms/owner/${editingRoom._id}`,
-                    fd,
-                    { headers: { Authorization: `Bearer ${await getToken()}` } }
-                  );
-
-                  if (data.success) {
-                    toast.success(data.message);
-                    fetchRooms();
-                    setEditingRoom(null);
-                  } else toast.error(data.message);
-                } catch (error) {
-                  toast.error("Error updating room");
-                }
-              }}
-            >
-              {/* Images */}
-              <p className="text-gray-800 mt-2 mb-2 font-semibold">
-                Room Images
-              </p>
+            <form onSubmit={handleSubmitEdit}>
+              {/* Imágenes */}
+              <p className="text-gray-800 mb-2 font-semibold">Room Images</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {[0, 1, 2, 3].map((index) => (
-                  <label key={index} className="cursor-pointer group">
-                    <div className="relative w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden hover:border-primary transition">
-                      <img
-                        className="object-cover w-full h-full group-hover:opacity-90 transition-opacity"
-                        src={
-                          formData.images[index]
-                            ? URL.createObjectURL(formData.images[index]) // nuevo archivo
-                            : formData.imagesPreview[index] ||
-                              "/placeholder.png" // URL existente
-                        }
-                        alt={`Room ${index + 1}`}
-                      />
-                    </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      hidden
-                      onChange={(e) => {
-                        const newImages = [...formData.images];
-                        newImages[index] = e.target.files[0];
-                        setFormData({ ...formData, images: newImages });
-                      }}
-                    />
-                  </label>
-                ))}
+                {formData.imagesData.map((img, i) => {
+  const fileInputRef = React.createRef();
+
+  return (
+    <div key={i} className="relative group">
+      <div
+        className="relative w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden hover:border-primary transition cursor-pointer"
+        onClick={() => fileInputRef.current.click()}
+      >
+        <img
+          className="object-cover w-full h-full group-hover:opacity-90 transition-opacity"
+          src={img.url || "/placeholder.png"}
+          alt={`Room ${i}`}
+        />
+        {img.url !== "/placeholder.png" && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation(); // Evita abrir el input al borrar
+              handleRemoveImage(i);
+            }}
+            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+          >
+            X
+          </button>
+        )}
+      </div>
+      <input
+        type="file"
+        accept="image/*"
+        hidden
+        ref={fileInputRef}
+        onChange={(e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          setFormData((prev) => ({
+            ...prev,
+            imagesData: prev.imagesData.map((image, idx) =>
+              idx === i
+                ? { file, url: URL.createObjectURL(file) }
+                : image
+            ),
+          }));
+        }}
+      />
+    </div>
+  );
+})}
+
               </div>
 
-              {/* Room details */}
-              <div className="flex flex-col sm:flex-row gap-6 mt-4">
+              {/* Room Details */}
+              <div className="flex flex-col sm:flex-row gap-6 mt-6">
                 <div className="flex-1">
-                  <label className="text-gray-800 font-semibold">
-                    Room Type
-                  </label>
+                  <label className="text-gray-800 font-semibold">Room Type</label>
                   <select
                     value={formData.roomType}
                     onChange={(e) =>
@@ -274,18 +289,13 @@ const ListRoom = () => {
                 </div>
 
                 <div className="flex-1">
-                  <label className="text-gray-800 font-semibold">
-                    Price per Night
-                  </label>
+                  <label className="text-gray-800 font-semibold">Price per Night</label>
                   <input
                     type="number"
                     min={0}
                     value={formData.pricePerNight}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        pricePerNight: e.target.value,
-                      })
+                      setFormData({ ...formData, pricePerNight: e.target.value })
                     }
                     className="mt-1 w-full p-3 border rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary transition"
                   />
@@ -293,11 +303,11 @@ const ListRoom = () => {
               </div>
 
               {/* Amenities */}
-              <p className="text-gray-800 mt-4 mb-2 font-semibold">Amenities</p>
+              <p className="text-gray-800 mt-6 mb-2 font-semibold">Amenities</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {Object.keys(formData.amenities).map((amenity) => (
+                {Object.keys(formData.amenities).map((amenity, index) => (
                   <label
-                    key={amenity}
+                    key={index}
                     className="flex items-center gap-2 cursor-pointer text-gray-700 hover:text-primary transition"
                   >
                     <input
@@ -319,7 +329,7 @@ const ListRoom = () => {
                 ))}
               </div>
 
-              <div className="flex justify-end mt-4 gap-2">
+              <div className="flex justify-end mt-6 gap-2">
                 <button
                   type="button"
                   onClick={() => setEditingRoom(null)}
@@ -329,9 +339,9 @@ const ListRoom = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded"
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
                 >
-                  Save
+                  Save Changes
                 </button>
               </div>
             </form>

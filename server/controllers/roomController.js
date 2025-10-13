@@ -93,34 +93,35 @@ export const toggleRoomAvailability = async (req, res) => {
 export const updateRoomOwner = async (req, res) => {
   try {
     const { roomId } = req.params;
-    const { roomType, pricePerNight, amenities } = req.body;
+    const { roomType, pricePerNight, amenities, existingImages } = req.body;
 
     const room = await Room.findById(roomId);
     if (!room)
-      return res
-        .status(404)
-        .json({ success: false, message: "Room not found" });
+      return res.status(404).json({ success: false, message: "Room not found" });
 
-    // Verificar que el owner es el dueño del hotel
     const hotel = await Hotel.findById(room.hotel);
     if (!hotel || hotel.owner.toString() !== req.auth.userId) {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
-    // Actualizar datos
+    // Actualizar datos básicos
     if (roomType) room.roomType = roomType;
     if (pricePerNight) room.pricePerNight = +pricePerNight;
     if (amenities) room.amenities = JSON.parse(amenities);
 
-    // Subida de nuevas imágenes si existen
+    // Manejar imágenes
+    let images = existingImages ? JSON.parse(existingImages) : []; // imágenes existentes desde el frontend
+
     if (req.files && req.files.length > 0) {
       const uploadedImages = await Promise.all(
         req.files.map((file) =>
           cloudinary.uploader.upload(file.path).then((r) => r.secure_url)
         )
       );
-      room.images = uploadedImages;
+      images = [...images, ...uploadedImages]; // combinar existentes + nuevas
     }
+
+    room.images = images;
 
     await room.save();
 

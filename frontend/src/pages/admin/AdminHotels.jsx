@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
+import toast from "react-hot-toast";
 import axios from "axios";
 
 const AdminHotels = () => {
@@ -12,7 +13,20 @@ const AdminHotels = () => {
       const res = await axios.get("/api/admin/hotels", { headers: { Authorization: `Bearer ${token}` } });
       setHotels(res.data.hotels);
     } catch (error) {
-      console.error("Error fetching properties:", error);
+      toast.error("Error fetching hotels");
+      console.error("Error fetching hotels:", error);
+    }
+  };
+
+  const deleteHotel = async (hotelId) => {
+    const token = await getToken();
+    try {
+      await axios.delete(`/api/admin/hotels/${hotelId}`, { headers: { Authorization: `Bearer ${token}` } });
+      setHotels(prev => prev.filter(h => h._id !== hotelId));
+      toast.success("Hotel deleted successfully");
+    } catch (error) {
+      toast.error("Error deleting Establishment");
+      console.error("Error deleting Establishment:", error);
     }
   };
 
@@ -20,48 +34,40 @@ const AdminHotels = () => {
     fetchHotels();
   }, []);
 
-  const deleteHotel = async (hotelId) => {
-    const token = await getToken();
-    try {
-      await axios.delete(`/api/admin/hotels/${hotelId}`, { headers: { Authorization: `Bearer ${token}` } });
-      fetchHotels();
-    } catch (error) {
-      console.error("Error deleting hotel:", error);
-    }
-  };
-
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Properties</h1>
-      <table className="min-w-full bg-white shadow rounded">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="py-2 px-4 text-left">Name</th>
-            <th className="py-2 px-4 text-left">Address</th>
-            <th className="py-2 px-4 text-left">City</th>
-            <th className="py-2 px-4 text-left">Owner</th>
-            <th className="py-2 px-4 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {hotels.map(h => (
-            <tr key={h._id} className="border-b">
-              <td className="py-2 px-4">{h.name}</td>
-              <td className="py-2 px-4">{h.address}</td>
-              <td className="py-2 px-4">{h.city}</td>
-              <td className="py-2 px-4">{h.owner?.username || "N/A"}</td>
-              <td className="py-2 px-4">
-                <button
-                  className="px-2 py-1 bg-red-500 text-white rounded"
-                  onClick={() => deleteHotel(h._id)}
-                >
-                  Delete
-                </button>
-              </td>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Properties</h1>
+      <div className="overflow-x-auto shadow rounded-lg border border-gray-200">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Name</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Address</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">City</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Owner</th>
+              <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {hotels.map((h) => (
+              <tr key={h._id} className="hover:bg-gray-50 transition">
+                <td className="px-6 py-4">{h.name}</td>
+                <td className="px-6 py-4">{h.address}</td>
+                <td className="px-6 py-4">{h.city}</td>
+                <td className="px-6 py-4">{h.owner?.username || "N/A"}</td>
+                <td className="px-6 py-4 text-center">
+                  <button
+                    onClick={() => deleteHotel(h._id)}
+                    className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
