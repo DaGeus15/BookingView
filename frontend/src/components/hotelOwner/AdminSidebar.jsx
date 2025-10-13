@@ -5,7 +5,7 @@ const AdminSidebar = () => {
   const sideBarLinks = [
     { name: "Dashboard", path: "/admin", icon: "📊" },
     { name: "Users", path: "/admin/users", icon: "👥" },
-    { name: "Hotels", path: "/admin/hotels", icon: "🏨" },
+    { name: "Establishments", path: "/admin/hotels", icon: "🏨" },
     { name: "Rooms", path: "/admin/rooms", icon: "🛏️" },
     { name: "Bookings", path: "/admin/bookings", icon: "📖" },
   ];

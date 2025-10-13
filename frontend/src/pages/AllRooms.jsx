@@ -64,6 +64,7 @@ const AllRooms = () => {
     "500 to 1000",
     "1000 to 2000",
     "2000 to 3000",
+    "3000+",
   ];
   const sortOptions = [
     "Price Low to High",
@@ -98,11 +99,18 @@ const AllRooms = () => {
 
   //Function to check if a room matches the selected price ranges
   const matchesPriceRange = (room) => {
+    const totalPrice = room.pricePerNight * nights * guests;
+
     return (
       selectedFilters.priceRange.length === 0 ||
       selectedFilters.priceRange.some((range) => {
-        const [min, max] = range.split(" to ").map(Number);
-        return room.pricePerNight >= min && room.pricePerNight <= max;
+        if (range.includes("+")) {
+          const min = Number(range.replace("+", ""));
+          return totalPrice >= min;
+        } else {
+          const [min, max] = range.split(" to ").map(Number);
+          return totalPrice >= min && totalPrice <= max;
+        }
       })
     );
   };

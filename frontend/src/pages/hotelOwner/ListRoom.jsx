@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Title from "../../components/Title";
 import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
+import { assets } from "../../assets/assets";
 
 const ListRoom = () => {
   const { axios, getToken, user, currency } = useAppContext();
@@ -55,12 +56,16 @@ const ListRoom = () => {
   const handleEdit = (room) => {
     setEditingRoom(room);
 
+    const safeImages = (room.images || []).filter(
+      (url) => typeof url === "string" && url.trim() !== ""
+    );
+
     const imagesData = [
-      ...room.images.map((url) => ({ file: null, url })),
-      ...Array(Math.max(0, 4 - room.images.length)).fill({
+      ...safeImages.map((url) => ({ file: null, url })),
+      ...Array.from({ length: Math.max(0, 4 - safeImages.length) }, () => ({
         file: null,
-        url: "/placeholder.png",
-      }),
+        url: null,
+      })),
     ];
 
     setFormData({
@@ -78,13 +83,14 @@ const ListRoom = () => {
   };
 
   const handleRemoveImage = (index) => {
-  setFormData((prev) => ({
-    ...prev,
-    imagesData: prev.imagesData.map((img, i) =>
-      i === index ? { file: null, url: "/placeholder.png" } : img
-    ),
-  }));
-};
+    setFormData((prev) => {
+      const updated = prev.imagesData.filter((_, i) => i !== index);
+      while (updated.length < 4) {
+        updated.push({ file: null, url: null });
+      }
+      return { ...prev, imagesData: updated };
+    });
+  };
 
   const handleSubmitEdit = async (e) => {
     e.preventDefault();
@@ -98,12 +104,22 @@ const ListRoom = () => {
       );
       fd.append("amenities", JSON.stringify(selectedAmenities));
 
+      // Subir solo nuevas imágenes válidas
       formData.imagesData.forEach((img) => {
-        if (img.file) fd.append("images", img.file);
+        if (img.file instanceof File) {
+          fd.append("images", img.file);
+        }
       });
 
+      // Mantener solo URLs limpias (no null, undefined o placeholders)
       const existingImages = formData.imagesData
-        .filter((img) => !img.file && img.url !== "/placeholder.png")
+        .filter(
+          (img) =>
+            typeof img.url === "string" &&
+            img.url.trim() !== "" &&
+            !img.url.startsWith("blob:") &&
+            img.url !== "/placeholder.png"
+        )
         .map((img) => img.url);
 
       fd.append("existingImages", JSON.stringify(existingImages));
@@ -118,7 +134,9 @@ const ListRoom = () => {
         toast.success(data.message);
         fetchRooms();
         setEditingRoom(null);
-      } else toast.error(data.message);
+      } else {
+        toast.error(data.message);
+      }
     } catch (error) {
       toast.error("Error updating room");
     }
@@ -209,8 +227,8 @@ const ListRoom = () => {
 
       {/* Modal de Edición */}
       {editingRoom && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-auto">
-          <div className="bg-white p-6 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 backdrop-blur-sm bg-white/10 flex items-center justify-center z-50 overflow-auto">
+          <div className="bg-white shadow-2xl rounded-xl p-6 border border-gray-200 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">Edit Room</h2>
 
             <form onSubmit={handleSubmitEdit}>
@@ -218,61 +236,62 @@ const ListRoom = () => {
               <p className="text-gray-800 mb-2 font-semibold">Room Images</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {formData.imagesData.map((img, i) => {
-  const fileInputRef = React.createRef();
+                  const fileInputRef = React.createRef();
 
-  return (
-    <div key={i} className="relative group">
-      <div
-        className="relative w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden hover:border-primary transition cursor-pointer"
-        onClick={() => fileInputRef.current.click()}
-      >
-        <img
-          className="object-cover w-full h-full group-hover:opacity-90 transition-opacity"
-          src={img.url || "/placeholder.png"}
-          alt={`Room ${i}`}
-        />
-        {img.url !== "/placeholder.png" && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation(); // Evita abrir el input al borrar
-              handleRemoveImage(i);
-            }}
-            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-          >
-            X
-          </button>
-        )}
-      </div>
-      <input
-        type="file"
-        accept="image/*"
-        hidden
-        ref={fileInputRef}
-        onChange={(e) => {
-          const file = e.target.files[0];
-          if (!file) return;
+                  return (
+                    <div key={i} className="relative group">
+                      <div
+                        className="relative w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden hover:border-primary transition cursor-pointer"
+                        onClick={() => fileInputRef.current.click()}
+                      >
+                        <img
+                          className="object-cover w-full h-full group-hover:opacity-90 transition-opacity"
+                          src={img.url ? img.url : assets.uploadArea}
+                          alt={`Room ${i}`}
+                        />
+                        {img.url !== "/placeholder.png" && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Evita abrir el input al borrar
+                              handleRemoveImage(i);
+                            }}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                          >
+                            X
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        hidden
+                        ref={fileInputRef}
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
 
-          setFormData((prev) => ({
-            ...prev,
-            imagesData: prev.imagesData.map((image, idx) =>
-              idx === i
-                ? { file, url: URL.createObjectURL(file) }
-                : image
-            ),
-          }));
-        }}
-      />
-    </div>
-  );
-})}
-
+                          setFormData((prev) => ({
+                            ...prev,
+                            imagesData: prev.imagesData.map((image, idx) =>
+                              idx === i
+                                ? { file, url: URL.createObjectURL(file) }
+                                : image
+                            ),
+                          }));
+                        }}
+                      />
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Room Details */}
               <div className="flex flex-col sm:flex-row gap-6 mt-6">
                 <div className="flex-1">
-                  <label className="text-gray-800 font-semibold">Room Type</label>
+                  <label className="text-gray-800 font-semibold">
+                    Room Type
+                  </label>
                   <select
                     value={formData.roomType}
                     onChange={(e) =>
@@ -289,13 +308,18 @@ const ListRoom = () => {
                 </div>
 
                 <div className="flex-1">
-                  <label className="text-gray-800 font-semibold">Price per Night</label>
+                  <label className="text-gray-800 font-semibold">
+                    Price per Night
+                  </label>
                   <input
                     type="number"
                     min={0}
                     value={formData.pricePerNight}
                     onChange={(e) =>
-                      setFormData({ ...formData, pricePerNight: e.target.value })
+                      setFormData({
+                        ...formData,
+                        pricePerNight: e.target.value,
+                      })
                     }
                     className="mt-1 w-full p-3 border rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary transition"
                   />

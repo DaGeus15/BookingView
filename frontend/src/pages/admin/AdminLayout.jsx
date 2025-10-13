@@ -1,4 +1,3 @@
-// src/layouts/admin/AdminLayout.js
 import React, { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { useAppContext } from "../../context/AppContext";

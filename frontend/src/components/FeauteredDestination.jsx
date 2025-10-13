@@ -11,7 +11,7 @@ const FeauteredDestination = () => {
       <div className="flex flex-col items-center mt-10 px-6 md:px-16 lg:px-24 bg-slate-50">
         <Title
           title="Featured Destination"
-          subTitle="Discover our handpicked section of exceptional properties around the world, offering unparalleled luxury and unforgettable experiences."
+          subTitle="Discover our handpicked section of exceptional properties, offering unparalleled luxury and unforgettable experiences."
         />
 
         <div className="flex flex-wrap items-center justify-center gap-6 mt-10">

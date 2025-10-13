@@ -27,13 +27,6 @@ const HotelCard = ({ room, index }) => {
             />
           </CardItem>
 
-          {/* Etiqueta Best Seller */}
-          {index % 2 === 0 && (
-            <p className="px-3 py-1 absolute top-3 left-3 text-xs bg-white text-gray-800 font-medium rounded-full shadow">
-              Best Seller
-            </p>
-          )}
-
           {/* Contenido */}
           <div className="p-4 pt-5">
             <div className="flex items-center justify-between">
