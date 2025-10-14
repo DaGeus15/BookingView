@@ -19,6 +19,12 @@ const AdminBookings = () => {
   };
 
   const deleteBooking = async (bookingId) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this booking?");
+    if (!confirmDelete) {
+      toast("Deletion cancelled", { icon: "❌" });
+      return;
+    }
+
     const token = await getToken();
     try {
       await axios.delete(`/api/admin/bookings/${bookingId}`, { headers: { Authorization: `Bearer ${token}` } });

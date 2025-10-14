@@ -8,7 +8,7 @@ export const protect = async (req, res, next) => {
 
     if (!userId) {
       console.warn("Intento de acceso sin userId desde Clerk");
-      return res.status(401).json({ success: false, message: "No autorizado" });
+      return res.status(401).json({ success: false, message: "Sign Up To Book A Room!" });
     }
 
     let user = await User.findById(userId);

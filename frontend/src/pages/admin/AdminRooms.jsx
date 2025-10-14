@@ -31,6 +31,9 @@ const AdminRooms = () => {
   };
 
   const deleteRoom = async (roomId) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this room?");
+    if (!confirmDelete) return; 
+
     const token = await getToken();
     try {
       await axios.delete(`/api/admin/rooms/${roomId}`, { headers: { Authorization: `Bearer ${token}` } });
@@ -41,6 +44,7 @@ const AdminRooms = () => {
       console.error("Error deleting room:", error);
     }
   };
+
 
   useEffect(() => {
     fetchRooms();

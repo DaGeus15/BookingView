@@ -10,7 +10,9 @@ const AdminHotels = () => {
   const fetchHotels = async () => {
     const token = await getToken();
     try {
-      const res = await axios.get("/api/admin/hotels", { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get("/api/admin/hotels", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setHotels(res.data.hotels);
     } catch (error) {
       toast.error("Error fetching hotels");
@@ -19,14 +21,24 @@ const AdminHotels = () => {
   };
 
   const deleteHotel = async (hotelId) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this establishment?"
+    );
+    if (!confirmDelete) {
+      toast("Deletion cancelled", { icon: "❌" });
+      return;
+    }
+
     const token = await getToken();
     try {
-      await axios.delete(`/api/admin/hotels/${hotelId}`, { headers: { Authorization: `Bearer ${token}` } });
-      setHotels(prev => prev.filter(h => h._id !== hotelId));
-      toast.success("Hotel deleted successfully");
+      await axios.delete(`/api/admin/hotels/${hotelId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setHotels((prev) => prev.filter((h) => h._id !== hotelId));
+      toast.success("Establishment deleted successfully");
     } catch (error) {
-      toast.error("Error deleting Establishment");
-      console.error("Error deleting Establishment:", error);
+      toast.error("Error deleting establishment");
+      console.error("Error deleting establishment:", error);
     }
   };
 
@@ -41,11 +53,21 @@ const AdminHotels = () => {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Name</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Address</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">City</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Owner</th>
-              <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">Actions</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                Name
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                Address
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                City
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                Owner
+              </th>
+              <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
