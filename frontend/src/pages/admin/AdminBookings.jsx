@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useAppContext } from "../../context/AppContext";
+import React, { useCallback, useEffect, useState } from "react";
+import { useAppContext } from "../../hooks/useAppContext";
 import toast from "react-hot-toast";
 import axios from "axios";
 
@@ -7,7 +7,7 @@ const AdminBookings = () => {
   const { getToken, currency } = useAppContext();
   const [bookings, setBookings] = useState([]);
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     const token = await getToken();
     try {
       const res = await axios.get("/api/admin/bookings", { headers: { Authorization: `Bearer ${token}` } });
@@ -16,7 +16,7 @@ const AdminBookings = () => {
       toast.error("Error fetching bookings");
       console.error(error);
     }
-  };
+  }, [getToken]);
 
   const deleteBooking = async (bookingId) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this booking?");
@@ -38,7 +38,7 @@ const AdminBookings = () => {
 
   useEffect(() => {
     fetchBookings();
-  }, []);
+  }, [fetchBookings]);
 
   return (
     <div className="space-y-6">

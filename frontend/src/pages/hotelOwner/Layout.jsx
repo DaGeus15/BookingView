@@ -1,7 +1,7 @@
-import React, { use, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import Sidebar from '../../components/hotelOwner/Sidebar'
 import { Outlet } from 'react-router-dom'
-import { useAppContext } from '../../context/AppContext'
+import { useAppContext } from "../../hooks/useAppContext"
 
 const Layout = () => {
     const {isOwner, navigate} = useAppContext();
@@ -10,7 +10,7 @@ const Layout = () => {
         if (!isOwner) {
             navigate('/');
         }
-    }, [isOwner]);
+    }, [isOwner, navigate]);
 
 
     return (

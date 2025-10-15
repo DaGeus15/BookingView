@@ -1,17 +1,17 @@
 import React, { useEffect } from "react";
 import { Outlet } from "react-router-dom";
-import { useAppContext } from "../../context/AppContext";
+import { useAppContext } from "../../hooks/useAppContext";
 import AdminSidebar from '../../components/hotelOwner/AdminSidebar'
 
 const AdminLayout = () => {
-  const { user, isAdmin, navigate } = useAppContext();
+  const { isAdmin, navigate } = useAppContext();
 
   useEffect(() => {
     // Redirigir si no es admin
     if (!isAdmin) {
       navigate("/");
     }
-  }, [isAdmin]);
+  }, [isAdmin, navigate]);
 
   return (
     <div className="flex flex-col h-screen">

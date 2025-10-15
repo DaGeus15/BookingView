@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Title from "../../components/Title";
-import { useAppContext } from "../../context/AppContext";
+import { useAppContext } from "../../hooks/useAppContext"
 import toast from "react-hot-toast";
 import { assets } from "../../assets/assets";
 
@@ -23,7 +23,7 @@ const ListRoom = () => {
     imagesData: [], // ahora dinámico
   });
 
-  const fetchRooms = async () => {
+  const fetchRooms = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await axios.get("/api/rooms/owner", {
@@ -32,10 +32,11 @@ const ListRoom = () => {
       if (data.success) setRooms(data.rooms);
     } catch (error) {
       toast.error("Error fetching rooms");
+      console.error(error)
     } finally {
       setLoading(false);
     }
-  };
+  }, [axios, getToken]);
 
   const toggleAvailability = async (roomId) => {
     try {
@@ -50,6 +51,7 @@ const ListRoom = () => {
       } else toast.error(data.message);
     } catch (error) {
       toast.error("Error updating availability");
+      console.error(error)
     }
   };
 
@@ -139,12 +141,13 @@ const ListRoom = () => {
       }
     } catch (error) {
       toast.error("Error updating room");
+      console.error(error)
     }
   };
 
   useEffect(() => {
     if (user) fetchRooms();
-  }, [user]);
+  }, [fetchRooms, user]);
 
   return (
     <div className="mt-10">

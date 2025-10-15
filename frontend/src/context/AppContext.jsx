@@ -1,12 +1,14 @@
 import { useAuth, useUser } from "@clerk/clerk-react";
 import axios from "axios";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
 
 const AppContext = createContext();
+
+export { AppContext };
 
 export const AppProvider = ({ children }) => {
   const currency = import.meta.env.VITE_CURRENCY || "$";
@@ -30,7 +32,7 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const token = await getToken();
       const { data } = await axios.get("/api/user", {
@@ -53,11 +55,11 @@ export const AppProvider = ({ children }) => {
         await signOut();
       }, 2000);
     }
-  };
+  }, [getToken, signOut]);
 
   useEffect(() => {
     if (user) fetchUser();
-  }, [user]);
+  }, [fetchUser, user]);
 
   useEffect(() => {
     fetchRooms();
@@ -83,5 +85,3 @@ export const AppProvider = ({ children }) => {
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
-
-export const useAppContext = () => useContext(AppContext);

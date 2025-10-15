@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Title from "../../components/Title";
 import { assets } from "../../assets/assets";
-import { useAppContext } from "../../context/AppContext";
+import { useAppContext } from "../../hooks/useAppContext";
 import toast from "react-hot-toast";
 
 const Dashboard = () => {
@@ -12,7 +12,7 @@ const Dashboard = () => {
     totalRevenue: 0,
   });
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       const { data } = await axios.get("/api/bookings/hotel", {
         headers: { Authorization: `Bearer ${await getToken()}` },
@@ -23,11 +23,11 @@ const Dashboard = () => {
     } catch (error) {
       toast.error(error.message);
     }
-  };
+  }, [axios, getToken]);
 
   useEffect(() => {
     if (user) fetchDashboardData();
-  }, [user]);
+  }, [fetchDashboardData, user]);
 
   return (
     <div className="space-y-10">
@@ -110,11 +110,10 @@ const Dashboard = () => {
                   </td>
                   <td className="px-6 py-4 text-center">
                     <span
-                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                        item.isPaid
+                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${item.isPaid
                           ? "bg-green-100 text-green-700"
                           : "bg-yellow-100 text-yellow-700"
-                      }`}
+                        }`}
                     >
                       {item.isPaid ? "Completed" : "Pending"}
                     </span>

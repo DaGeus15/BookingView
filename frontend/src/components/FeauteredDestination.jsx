@@ -1,7 +1,7 @@
 import React from "react";
 import HotelCard from "../components/HotelCard";
 import Title from "./Title";
-import { useAppContext } from "../context/AppContext";
+import { useAppContext } from "../hooks/useAppContext";
 
 const FeauteredDestination = () => {
   const { rooms, navigate } = useAppContext();

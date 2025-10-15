@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useAppContext } from '../context/AppContext'
+import { useAppContext } from "../hooks/useAppContext";
 import { useParams } from 'react-router-dom'
 
 const Loader = () => {
@@ -12,7 +12,7 @@ const Loader = () => {
             navigate(`/${nextUrl}`)
         },8000)
     }
-  },[nextUrl])
+  },[navigate, nextUrl])
 
   return (
 	<div className='flex justify-center items-center h-screen'>

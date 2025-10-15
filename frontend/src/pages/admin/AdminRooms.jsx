@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useAppContext } from "../../context/AppContext";
+import React, { useCallback, useEffect, useState } from "react";
+import { useAppContext } from "../../hooks/useAppContext";
 import toast from "react-hot-toast";
 import axios from "axios";
 
@@ -7,7 +7,7 @@ const AdminRooms = () => {
   const { getToken, currency } = useAppContext();
   const [rooms, setRooms] = useState([]);
 
-  const fetchRooms = async () => {
+  const fetchRooms = useCallback(async () => {
     const token = await getToken();
     try {
       const res = await axios.get("/api/admin/rooms", { headers: { Authorization: `Bearer ${token}` } });
@@ -16,7 +16,7 @@ const AdminRooms = () => {
       toast.error("Error fetching rooms");
       console.error("Error fetching rooms:", error);
     }
-  };
+  }, [getToken]);
 
   const toggleAvailability = async (roomId) => {
     const token = await getToken();
@@ -32,7 +32,7 @@ const AdminRooms = () => {
 
   const deleteRoom = async (roomId) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this room?");
-    if (!confirmDelete) return; 
+    if (!confirmDelete) return;
 
     const token = await getToken();
     try {
@@ -48,7 +48,7 @@ const AdminRooms = () => {
 
   useEffect(() => {
     fetchRooms();
-  }, []);
+  }, [fetchRooms]);
 
   return (
     <div className="space-y-6">

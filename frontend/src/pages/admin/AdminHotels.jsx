@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useAppContext } from "../../context/AppContext";
+import React, { useCallback, useEffect, useState } from "react";
+import { useAppContext } from "../../hooks/useAppContext";
 import toast from "react-hot-toast";
 import axios from "axios";
 
@@ -7,7 +7,7 @@ const AdminHotels = () => {
   const { getToken } = useAppContext();
   const [hotels, setHotels] = useState([]);
 
-  const fetchHotels = async () => {
+  const fetchHotels = useCallback(async () => {
     const token = await getToken();
     try {
       const res = await axios.get("/api/admin/hotels", {
@@ -18,7 +18,7 @@ const AdminHotels = () => {
       toast.error("Error fetching hotels");
       console.error("Error fetching hotels:", error);
     }
-  };
+  }, [getToken]);
 
   const deleteHotel = async (hotelId) => {
     const confirmDelete = window.confirm(
@@ -44,7 +44,7 @@ const AdminHotels = () => {
 
   useEffect(() => {
     fetchHotels();
-  }, []);
+  }, [fetchHotels]);
 
   return (
     <div className="space-y-6">

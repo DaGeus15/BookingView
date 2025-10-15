@@ -1,11 +1,11 @@
-import React, { use, useMemo, useState } from "react";
-import { assets, facilityIcons, roomsDummyData } from "../assets/assets";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import React, { useCallback, useMemo, useState } from "react";
+import { assets, facilityIcons } from "../assets/assets";
+import { useLocation, useSearchParams } from "react-router-dom";
 import NoRooms from "../components/No-rooms";
-import { useAppContext } from "../context/AppContext";
+import { useAppContext } from "../hooks/useAppContext";
 import SearchBar from "../components/searchBar";
 
-const CheckBox = ({ label, selected = false, onChange = () => {} }) => {
+const CheckBox = ({ label, selected = false, onChange = () => { } }) => {
   return (
     <label className="flex gap-3 items-center cursor-pointer mt-2 text-sm">
       <input
@@ -17,14 +17,14 @@ const CheckBox = ({ label, selected = false, onChange = () => {} }) => {
     </label>
   );
 };
-const RadioButton = ({ label, selected = false, onChange = () => {} }) => {
+const RadioButton = ({ label, selected = false, onChange = () => { } }) => {
   return (
     <label className="flex gap-3 items-center cursor-pointer mt-2 text-sm">
       <input
         type="radio"
         name="sortOption"
         checked={selected}
-        onChange={(e) => onChange(label)}
+        onChange={() => onChange(label)}
       />
       <span className="font-light select-none">{label}</span>
     </label>
@@ -36,9 +36,9 @@ const AllRooms = () => {
   const { rooms, navigate, currency } = useAppContext();
   const location = useLocation();
   const [openFilters, setOpenFilters] = useState(false);
-  const [selectedRoomTypes, setSelectedRoomTypes] = useState([]);
-  const [selectedPriceRanges, setSelectedPriceRanges] = useState([]);
-  const [selectedSortOption, setSelectedSortOption] = useState("");
+  // const [selectedRoomTypes, setSelectedRoomTypes] = useState([]);
+  // const [selectedPriceRanges, setSelectedPriceRanges] = useState([]);
+  // const [selectedSortOption, setSelectedSortOption] = useState("");
   const [selectedFilters, setSelectedFilters] = useState({
     roomType: [],
     priceRange: [],
@@ -90,15 +90,15 @@ const AllRooms = () => {
   };
 
   //Function to check if a room matches the selected room types
-  const matchesRoomType = (room) => {
+  const matchesRoomType = useCallback((room) => {
     return (
       selectedFilters.roomType.length === 0 ||
       selectedFilters.roomType.includes(room.roomType)
     );
-  };
+  }, [selectedFilters.roomType]);
 
   //Function to check if a room matches the selected price ranges
-  const matchesPriceRange = (room) => {
+  const matchesPriceRange = useCallback((room) => {
     const totalPrice = room.pricePerNight * nights * guests;
 
     return (
@@ -113,9 +113,10 @@ const AllRooms = () => {
         }
       })
     );
-  };
+  }, [guests, nights, selectedFilters.priceRange]);
+
   // Function to sort rooms based on the selected sort option
-  const sortRooms = (a, b) => {
+  const sortRooms = useCallback((a, b) => {
     if (selectedSort === "Price Low to High") {
       return a.pricePerNight - b.pricePerNight;
     } else if (selectedSort === "Price High to Low") {
@@ -124,14 +125,14 @@ const AllRooms = () => {
       return new Date(b.createdAt) - new Date(a.createdAt);
     }
     return 0;
-  };
+  }, [selectedSort]);
 
   //Filter destination
-  const filterDestination = (room) => {
+  const filterDestination = useCallback((room) => {
     const destionation = searchParams.get("destination");
     if (!destionation) return true;
     return room.hotel.city.toLowerCase().includes(destionation.toLowerCase());
-  };
+  }, [searchParams]);
 
   // Filter and sort rooms based on the selected filters and sort option
   const filteredRooms = useMemo(() => {
@@ -143,7 +144,7 @@ const AllRooms = () => {
           filterDestination(room)
       )
       .sort(sortRooms);
-  }, [rooms, selectedFilters, selectedSort, searchParams]);
+  }, [rooms, sortRooms, matchesRoomType, matchesPriceRange, filterDestination]);
 
   //Clear filters'
   const clearFilters = () => {
@@ -246,9 +247,8 @@ const AllRooms = () => {
 
       <div className="w-80 p-6 border border-gray-300 rounded-lg shadow-md bg-white text-gray-600 max-lg:mb-8 min-lg:mt-16">
         <div
-          className={`flex items-center justify-between px-5 py-2.5 min-lg:border-gray-300 ${
-            openFilters && "border-b"
-          }`}
+          className={`flex items-center justify-between px-5 py-2.5 min-lg:border-gray-300 ${openFilters && "border-b"
+            }`}
         >
           <p className="text-base font-medium text-gray-800">FILTERS</p>
           <span
@@ -266,9 +266,8 @@ const AllRooms = () => {
         </div>
         {/* controles de filtro */}
         <div
-          className={`${
-            openFilters ? "h-auto" : "h-0 lg:h-auto"
-          } overflow-hidden transition-all duration-700`}
+          className={`${openFilters ? "h-auto" : "h-0 lg:h-auto"
+            } overflow-hidden transition-all duration-700`}
         >
           <div className="px-5 pt-5">
             <p className="font-medium text-gray-800 pb-2">Popular filters</p>

@@ -1,6 +1,6 @@
 import { React } from "react";
 import Navbar from "./components/Navbar";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Footer from "./components/footer";
 import AllRooms from "./pages/AllRooms";
@@ -12,7 +12,7 @@ import Dashboard from "./pages/hotelOwner/Dashboard";
 import AddRoom from "./pages/hotelOwner/AddRoom";
 import ListRoom from "./pages/hotelOwner/ListRoom";
 import { Toaster } from "react-hot-toast";
-import { useAppContext } from "./context/AppContext";
+import { useAppContext } from "./hooks/useAppContext";
 import Loader from "./components/Loader";
 import FAQ from "./pages/FAQ";
 import AdminGuard from "./guards/adminGuard";
@@ -24,7 +24,7 @@ import AdminRooms from "./pages/admin/AdminRooms";
 import AdminBookings from "./pages/admin/AdminBookings";
 
 const App = () => {
-  const isOwnerPath = useLocation().pathname.includes("owner");
+  // const isOwnerPath = useLocation().pathname.includes("owner");
   const { showHotelReg } = useAppContext();
   // const {showHotelReg} = useAppContext();
 

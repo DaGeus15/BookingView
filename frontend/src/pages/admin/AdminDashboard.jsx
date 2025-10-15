@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Title from "../../components/Title";
-import { useAppContext } from "../../context/AppContext";
+import { useAppContext } from "../../hooks/useAppContext";
 import toast from "react-hot-toast";
 import axios from "axios";
 import {
@@ -110,7 +110,7 @@ const AdminDashboard = () => {
     };
 
     fetchStats();
-  }, []);
+  }, [getToken]);
 
   return (
     <div className="space-y-10">

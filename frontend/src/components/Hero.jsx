@@ -3,7 +3,7 @@ import { assets, cities } from "../assets/assets";
 import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
-import { useAppContext } from "../context/AppContext";
+import { useAppContext } from "../hooks/useAppContext";
 
 const Hero = () => {
   const { navigate, getToken, axios, setSearchedCities } = useAppContext();

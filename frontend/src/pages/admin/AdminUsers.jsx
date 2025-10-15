@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useAppContext } from "../../context/AppContext";
+import React, { useEffect, useState, useCallback } from "react";
+import { useAppContext } from "../../hooks/useAppContext";
 import toast from "react-hot-toast";
 import axios from "axios";
 
@@ -7,7 +7,7 @@ const AdminUsers = () => {
   const { getToken } = useAppContext();
   const [users, setUsers] = useState([]);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     const token = await getToken();
     try {
       const res = await axios.get("/api/admin/users", { headers: { Authorization: `Bearer ${token}` } });
@@ -16,7 +16,7 @@ const AdminUsers = () => {
       toast.error("Error fetching users");
       console.error(error);
     }
-  };
+  }, [getToken]);
 
   const toggleUserActive = async (userId) => {
     const token = await getToken();
@@ -32,7 +32,7 @@ const AdminUsers = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
   return (
     <div className="space-y-6">

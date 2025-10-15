@@ -3,9 +3,9 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
-import { useAppContext } from "../context/AppContext";
+import { useAppContext } from "../hooks/useAppContext";
 
-import { assets, facilityIcons, roomCommonData } from "../assets/assets";
+import { assets, facilityIcons } from "../assets/assets";
 import toast from "react-hot-toast";
 
 const RoomDetails = () => {
@@ -44,7 +44,7 @@ const RoomDetails = () => {
       setRoom(room);
       setMainImage(room.images[0]);
     }
-  }, [rooms]);
+  }, [id, rooms]);
 
   // Cerrar calendario si hace click fuera
   useEffect(() => {
@@ -189,9 +189,8 @@ const RoomDetails = () => {
                 key={index}
                 src={image}
                 alt="Room Image"
-                className={`w-full rounded-xl shadow-md object-cover cursor-pointer ${
-                  mainImage === image && "outline-3 outline-orange-500"
-                }`}
+                className={`w-full rounded-xl shadow-md object-cover cursor-pointer ${mainImage === image && "outline-3 outline-orange-500"
+                  }`}
               />
             ))}
           </div>

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { assets } from "../assets/assets";
 import { CardBody, CardContainer, CardItem } from "../components/3d-card";
 
-const HotelCard = ({ room, index }) => {
+const HotelCard = ({ room }) => {
   return (
     <CardContainer className="inter-var">
       <CardBody
