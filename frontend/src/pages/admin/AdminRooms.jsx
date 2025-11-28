@@ -6,6 +6,8 @@ import axios from "axios";
 const AdminRooms = () => {
   const { getToken, currency } = useAppContext();
   const [rooms, setRooms] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState(null);
 
   const fetchRooms = useCallback(async () => {
     const token = await getToken();
@@ -30,21 +32,25 @@ const AdminRooms = () => {
     }
   };
 
-  const deleteRoom = async (roomId) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this room?");
-    if (!confirmDelete) return;
+  const handleDeleteRoom = (room) => {
+    setSelectedRoom(room);
+    setShowDeleteModal(true);
+  };
 
+  const confirmDeleteRoom = async () => {
     const token = await getToken();
     try {
-      await axios.delete(`/api/admin/rooms/${roomId}`, { headers: { Authorization: `Bearer ${token}` } });
-      setRooms(prev => prev.filter(r => r._id !== roomId));
+      await axios.delete(`/api/admin/rooms/${selectedRoom._id}`, { headers: { Authorization: `Bearer ${token}` } });
+      setRooms(prev => prev.filter(r => r._id !== selectedRoom._id));
       toast.success("Room deleted successfully");
     } catch (error) {
       toast.error("Error deleting room");
       console.error("Error deleting room:", error);
+    } finally {
+      setShowDeleteModal(false);
+      setSelectedRoom(null);
     }
   };
-
 
   useEffect(() => {
     fetchRooms();
@@ -83,7 +89,7 @@ const AdminRooms = () => {
                     Toggle
                   </button>
                   <button
-                    onClick={() => deleteRoom(r._id)}
+                    onClick={() => handleDeleteRoom(r)}
                     className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
                   >
                     Delete
@@ -94,6 +100,35 @@ const AdminRooms = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Modal de Confirmación de Eliminación */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-opacity-40 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-semibold mb-4 text-gray-800">Delete Room</h3>
+            <p className="text-gray-600 mb-2">
+              Are you sure you want to delete this room?
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              <strong>Room Type:</strong> {selectedRoom?.roomType}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all text-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteRoom}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

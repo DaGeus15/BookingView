@@ -55,32 +55,28 @@ const AdminDashboard = () => {
         bookings.forEach((b) => {
           if (!b.checkInDate) return;
           const date = new Date(b.checkInDate);
-          const month = date.toLocaleString("default", { month: "short" });
-          bookingsPerMonth[month] = (bookingsPerMonth[month] || 0) + 1;
+          const month = date.toLocaleString("en-US", { month: "short" });
+          const year = date.getFullYear();
+          const key = `${month} ${year}`;
+          bookingsPerMonth[key] = (bookingsPerMonth[key] || 0) + 1;
         });
 
-        const monthsOrdered = [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "May",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dec",
-        ];
-        const bookingsByMonthData = monthsOrdered
-          .filter((m) => bookingsPerMonth[m])
-          .map((m) => ({
-            month: m,
-            bookings: bookingsPerMonth[m],
-          }));
+        // Convertir a array y ordenar por fecha
+        const bookingsByMonthData = Object.keys(bookingsPerMonth)
+          .map((key) => ({
+            month: key,
+            bookings: bookingsPerMonth[key],
+          }))
+          .sort((a, b) => {
+            const dateA = new Date(a.month);
+            const dateB = new Date(b.month);
+            return dateA - dateB;
+          });
 
         setBookingsByMonth(bookingsByMonthData);
+
+        console.log("DATA GRAFICA:", bookingsByMonthData);
+
 
         // 🏨 Agrupar reservas por hotel
         const hotelMap = {};

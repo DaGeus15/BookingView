@@ -9,6 +9,8 @@ import toast from "react-hot-toast";
 const MyBookings = () => {
   const { axios, getToken, user } = useAppContext();
   const [bookings, setBookings] = useState([]);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
 
   const fetchUserBookings = useCallback(async () => {
     try {
@@ -41,6 +43,38 @@ const MyBookings = () => {
       }
     } catch (error) {
       toast.error(error.message);
+    }
+  };
+
+  const handleCancelBooking = async (bookingId, checkInDate) => {
+    // Verificar si la fecha de check-in ya pasó
+    const today = new Date();
+    if (new Date(checkInDate) <= today) {
+      toast.error("Cannot cancel a booking that has already started");
+      return;
+    }
+
+    setSelectedBooking({ id: bookingId, checkInDate });
+    setShowCancelModal(true);
+  };
+
+  const confirmCancelBooking = async () => {
+    try {
+      const { data } = await axios.delete(`/api/bookings/cancel/${selectedBooking.id}`, {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+      
+      if (data.success) {
+        toast.success(data.message);
+        fetchUserBookings();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setShowCancelModal(false);
+      setSelectedBooking(null);
     }
   };
 
@@ -110,32 +144,70 @@ const MyBookings = () => {
                 </p>
               </div>
             </div>
-            {/* Payent Status */}
-            <div className="flex flex-col items-start justify-center pt-3">
+            {/* Payment Status */}
+            <div className="flex flex-col items-start justify-center pt-3 gap-2">
               <div className="flex items-center gap-2">
                 <div
-                  className={`h-3 w-3 rounded-full ${booking.isPaid ? "bg-green-500" : "bg-red-500"
-                    }`}
+                  className={`h-3 w-3 rounded-full ${
+                    booking.isPaid ? "bg-green-500" : "bg-red-500"
+                  }`}
                 ></div>
                 <p
-                  className={`text-sm ${booking.isPaid ? "text-green-500" : "text-red-500"
-                    }`}
+                  className={`text-sm ${
+                    booking.isPaid ? "text-green-500" : "text-red-500"
+                  }`}
                 >
                   {booking.isPaid ? "Paid" : "Unpaid"}
                 </p>
               </div>
               {!booking.isPaid && (
-                <button
-                  onClick={() => handlePayment(booking._id)}
-                  className="px-4 py-1.5 mt-4 text-xs border border-gray-400 rounded-full hover:bg-gray-50 transition-all cursor-pointer"
-                >
-                  Pay Now
-                </button>
+                <>
+                  <button
+                    onClick={() => handlePayment(booking._id)}
+                    className="px-4 py-1.5 text-xs border border-gray-400 rounded-full hover:bg-gray-50 transition-all cursor-pointer"
+                  >
+                    Pay Now
+                  </button>
+                  {new Date(booking.checkInDate) > new Date() && (
+                    <button
+                      onClick={() => handleCancelBooking(booking._id, booking.checkInDate)}
+                      className="px-4 py-1.5 text-xs border border-red-400 text-red-600 rounded-full hover:bg-red-50 transition-all cursor-pointer"
+                    >
+                      Cancel Booking
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
         ))}
       </div>
+
+      {/* Modal de Cancelación */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-opacity-40 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-semibold mb-4 text-gray-800">Cancel Booking</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to cancel this booking? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all text-gray-700"
+              >
+                No, Keep it
+              </button>
+              <button
+                onClick={confirmCancelBooking}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all"
+              >
+                Yes, Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

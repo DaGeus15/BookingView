@@ -6,6 +6,8 @@ import axios from "axios";
 const AdminHotels = () => {
   const { getToken } = useAppContext();
   const [hotels, setHotels] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedHotel, setSelectedHotel] = useState(null);
 
   const fetchHotels = useCallback(async () => {
     const token = await getToken();
@@ -20,25 +22,25 @@ const AdminHotels = () => {
     }
   }, [getToken]);
 
-  const deleteHotel = async (hotelId) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this establishment?"
-    );
-    if (!confirmDelete) {
-      toast("Deletion cancelled", { icon: "❌" });
-      return;
-    }
+  const handleDeleteHotel = (hotel) => {
+    setSelectedHotel(hotel);
+    setShowDeleteModal(true);
+  };
 
+  const confirmDeleteHotel = async () => {
     const token = await getToken();
     try {
-      await axios.delete(`/api/admin/hotels/${hotelId}`, {
+      await axios.delete(`/api/admin/hotels/${selectedHotel._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setHotels((prev) => prev.filter((h) => h._id !== hotelId));
+      setHotels((prev) => prev.filter((h) => h._id !== selectedHotel._id));
       toast.success("Establishment deleted successfully");
     } catch (error) {
       toast.error("Error deleting establishment");
       console.error("Error deleting establishment:", error);
+    } finally {
+      setShowDeleteModal(false);
+      setSelectedHotel(null);
     }
   };
 
@@ -79,7 +81,7 @@ const AdminHotels = () => {
                 <td className="px-6 py-4">{h.owner?.username || "N/A"}</td>
                 <td className="px-6 py-4 text-center">
                   <button
-                    onClick={() => deleteHotel(h._id)}
+                    onClick={() => handleDeleteHotel(h)}
                     className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
                   >
                     Delete
@@ -90,6 +92,37 @@ const AdminHotels = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Modal de Confirmación de Eliminación */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-opacity-40 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-semibold mb-4 text-gray-800">
+              Delete Establishment
+            </h3>
+            <p className="text-gray-600 mb-2">
+              Are you sure you want to delete this establishment?
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              <strong>Name:</strong> {selectedHotel?.name}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all text-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteHotel}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

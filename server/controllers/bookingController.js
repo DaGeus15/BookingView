@@ -143,36 +143,175 @@ export const stripePayment = async (req, res) => {
   try {
     const { bookingId } = req.body;
 
+    if (!bookingId) {
+      return res.status(400).json({
+        success: false,
+        message: "Booking ID is required",
+      });
+    }
+
     const booking = await Booking.findById(bookingId);
-    const roomData = await Room.findById(booking.room).populate('hotel');
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    const roomData = await Room.findById(booking.room).populate("hotel");
+    if (!roomData) {
+      return res.status(404).json({
+        success: false,
+        message: "Room not found",
+      });
+    }
+
     const totalPrice = booking.totalPrice;
-    const {origin} = req.headers;
+    if (!totalPrice || totalPrice <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid booking price",
+      });
+    }
+
+    // 🕵 Detectar origen
+    const origin = req.headers.origin;
+
+    console.log("🌍 ORIGIN DETECTADO:", origin);
+
+    const baseUrl_web = process.env.FRONTEND_WEB || "http://localhost:5173";
+    const baseUrl_native = process.env.FRONTEND_URL_NATIVE || "https://harmonious-stardust-f4e1ff.netlify.app/retorno.html";
+
+    // 🔍 Detectar si es web o móvil
+    let baseUrl = baseUrl_web; // default
+
+    if (origin) {
+      if (origin.includes("localhost:5173") || origin.includes("tudominio.com")) {
+        baseUrl = baseUrl_web;
+      } else {
+        baseUrl = baseUrl_native;
+      }
+    } else {
+      // peticiones desde APP NO TIENEN origin → es móvil
+      baseUrl = baseUrl_native;
+    }
+
+    console.log("🔗 BASE URL SELECCIONADA:", baseUrl);
+
     const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
 
-    const line_items=[
+    const line_items = [
       {
-        price_data:{
-          currency:"usd",
-          product_data:{
+        price_data: {
+          currency: "usd",
+          product_data: {
             name: roomData.hotel.name,
+            description: `${roomData.roomType} - Booking ID: ${bookingId}`,
           },
-          unit_amount: totalPrice*100
+          unit_amount: Math.round(totalPrice * 100),
         },
-        quantity:1,
-      }
-    ]
-    //Create Checkout Session
+        quantity: 1,
+      },
+    ];
+
     const session = await stripeInstance.checkout.sessions.create({
       line_items,
       mode: "payment",
-      success_url:`${origin}/loader/my-bookings`,
-      cancel_url:`${origin}/my-bookings`,
-      metadata:{
-        bookingId,
-      }
-    })
-    res.json({success:true, url:session.url})
+      success_url: `${baseUrl}/loader/my-bookings`,
+      cancel_url: `${baseUrl}/my-bookings`,
+      metadata: {
+        bookingId: bookingId.toString(),
+      },
+    });
+
+    return res.json({
+      success: true,
+      url: session.url,
+      sessionId: session.id,
+    });
   } catch (error) {
-   res.json({success:false, message : "Payment Failed"})
+    console.error("Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Payment Failed",
+    });
   }
-}
+};
+
+
+
+
+export const cancelBooking = async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    const userId = req.user._id;
+
+    // Verificar si existe
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.json({
+        success: false,
+        message: "Booking not found"
+      });
+    }
+
+    // Verificar que pertenece al usuario
+    if (booking.user.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not allowed to cancel this booking"
+      });
+    }
+
+    // Evitar cancelar si ya empezó el viaje
+    const today = new Date();
+    if (new Date(booking.checkInDate) <= today) {
+      return res.json({
+        success: false,
+        message: "Cannot cancel a booking that has already started"
+      });
+    }
+
+    // Eliminar la reserva
+    await Booking.findByIdAndDelete(bookingId);
+
+    // Opcional: enviar correo
+    try {
+      const roomData = await Room.findById(booking.room).populate("hotel");
+
+      const mailOptions = {
+        from: process.env.SENDER_EMAIL,
+        to: req.user.email,
+        subject: "Booking Cancelled",
+        html: `
+          <h2>Your Booking Has Been Cancelled</h2>
+          <p>Dear: ${req.user.username}</p>
+          <p>Your reservation has been cancelled.</p>
+          <ul>
+            <li><strong>Booking ID:</strong> ${booking._id}</li>
+            <li><strong>Property:</strong> ${roomData.hotel.name}</li>
+            <li><strong>Location:</strong> ${roomData.hotel.address}</li>
+            <li><strong>Original Date:</strong> ${booking.checkInDate.toDateString()}</li>
+            <li><strong>Refund:</strong> $${booking.totalPrice}</li>
+          </ul>
+        `
+      };
+
+      await transporter.sendMail(mailOptions);
+    } catch (emailError) {
+      console.log("⚠ Error sending cancellation email:", emailError.message);
+    }
+
+    res.json({
+      success: true,
+      message: "Booking cancelled successfully"
+    });
+  } catch (error) {
+    console.error("Error in cancelBooking:", error.message);
+    res.json({
+      success: false,
+      message: "Failed to cancel booking"
+    });
+  }
+};

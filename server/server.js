@@ -27,7 +27,8 @@ app.post("/api/stripe", express.raw({ type: "application/json" }), stripeWebhook
 app.post("/api/clerk", express.raw({ type: "*/*" }), clerkWebhooks);
 
 app.use(cookieParser());
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cors({ origin: true, credentials: true }));
+
 app.use(express.json());
 app.use(clerkMiddleware());
 
@@ -44,4 +45,6 @@ syncUsers()
   .then(() => console.log("✅ Sincronización inicial completa"))
   .catch((err) => console.error("Error al sincronizar usuarios:", err));
 
-app.listen(PORT, () => console.log(`Servidor corriendo en el puerto ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => {
+  console.log('✅ Server on http://0.0.0.0:5000');
+});

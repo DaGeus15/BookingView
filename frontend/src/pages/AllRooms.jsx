@@ -36,14 +36,14 @@ const AllRooms = () => {
   const { rooms, navigate, currency } = useAppContext();
   const location = useLocation();
   const [openFilters, setOpenFilters] = useState(false);
-  // const [selectedRoomTypes, setSelectedRoomTypes] = useState([]);
-  // const [selectedPriceRanges, setSelectedPriceRanges] = useState([]);
-  // const [selectedSortOption, setSelectedSortOption] = useState("");
   const [selectedFilters, setSelectedFilters] = useState({
     roomType: [],
     priceRange: [],
   });
   const [selectedSort, setSelectedSort] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const roomsPerPage = 5;
+
   const guests = Number(searchParams.get("guests") || 1);
   const checkInStr = searchParams.get("checkIn");
   const checkOutStr = searchParams.get("checkOut");
@@ -71,6 +71,7 @@ const AllRooms = () => {
     "Price High to Low",
     "Newest First",
   ];
+
   //Handle changes for filters ans sorting
   const handleFilterChange = (checked, value, type) => {
     setSelectedFilters((prevFilters) => {
@@ -84,9 +85,12 @@ const AllRooms = () => {
       }
       return updatedFilters;
     });
+    setCurrentPage(1); // Reset to first page when filters change
   };
+
   const handleSortChange = (sortOption) => {
     setSelectedSort(sortOption);
+    setCurrentPage(1); // Reset to first page when sort changes
   };
 
   //Function to check if a room matches the selected room types
@@ -146,17 +150,29 @@ const AllRooms = () => {
       .sort(sortRooms);
   }, [rooms, sortRooms, matchesRoomType, matchesPriceRange, filterDestination]);
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredRooms.length / roomsPerPage);
+  const indexOfLastRoom = currentPage * roomsPerPage;
+  const indexOfFirstRoom = indexOfLastRoom - roomsPerPage;
+  const currentRooms = filteredRooms.slice(indexOfFirstRoom, indexOfLastRoom);
+
   //Clear filters'
   const clearFilters = () => {
     setSelectedFilters({ roomType: [], priceRange: [] });
     setSelectedSort("");
     setSearchParams({});
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <div className="flex flex-col-reverse lg:flex-row items-start justify-between pt-28 md:pt-35 px-4 md:px-16 lg:px-24 xl:px-32">
       {/* Header */}
-      <div>
+      <div className="flex-1 w-full">
         <div className="flex flex-col items-start text-left">
           <h1 className="font-playfair text-4xl md:text-[40px]">Rooms</h1>
           <p className="text-sm md:text-base text-gray-500/90 mt-2 max-w-174">
@@ -170,33 +186,25 @@ const AllRooms = () => {
           initialCheckOut={checkOut}
           initialGuests={guests}
         />
+
+        {/* Results count */}
+        {filteredRooms.length > 0 && (
+          <p className="text-sm text-gray-600 mt-4">
+            Showing {indexOfFirstRoom + 1}-{Math.min(indexOfLastRoom, filteredRooms.length)} of {filteredRooms.length} rooms
+          </p>
+        )}
+
         {filteredRooms.length === 0 ? (
           <NoRooms />
         ) : (
-          filteredRooms.map((room) => (
-            <div
-              key={room._id}
-              className="flex flex-col md:flex-row items-start py-10 gap-6 border-b border-gray-300 last:pb-30 last:border-0"
-            >
-              {/* Room Image */}
-              <img
-                onClick={() => {
-                  navigate({
-                    pathname: `/rooms/${room._id}`,
-                    search: location.search,
-                  });
-                  scrollTo(0, 0);
-                }}
-                src={room.images[0]}
-                alt="room-img"
-                title="View Room Details"
-                className="max-h-65 md:w-1/2 rounded-xl shadow-lg object-cover cursor-pointer"
-              />
-
-              {/* Room Info */}
-              <div className="md:w-1/2 flex flex-col gap-2">
-                <p className="text-gray-800">{room.hotel.city}</p>
-                <p
+          <>
+            {currentRooms.map((room) => (
+              <div
+                key={room._id}
+                className="flex flex-col md:flex-row items-start py-10 gap-6 border-b border-gray-300 last:border-0"
+              >
+                {/* Room Image */}
+                <img
                   onClick={() => {
                     navigate({
                       pathname: `/rooms/${room._id}`,
@@ -204,47 +212,115 @@ const AllRooms = () => {
                     });
                     scrollTo(0, 0);
                   }}
-                  className="text-gray-800 text-3xl font-playfair cursor-pointer"
-                >
-                  {room.hotel.name}
-                </p>
+                  src={room.images[0]}
+                  alt="room-img"
+                  title="View Room Details"
+                  className="max-h-65 md:w-1/2 rounded-xl shadow-lg object-cover cursor-pointer"
+                />
 
-                <div className="flex items-center gap-1 text-gray-500 mt-2 text-sm">
-                  <img src={assets.locationIcon} alt="location-icon" />
-                  <span>{room.hotel.address}</span>
+                {/* Room Info */}
+                <div className="md:w-1/2 flex flex-col gap-2">
+                  <p className="text-gray-800">{room.hotel.city}</p>
+                  <p
+                    onClick={() => {
+                      navigate({
+                        pathname: `/rooms/${room._id}`,
+                        search: location.search,
+                      });
+                      scrollTo(0, 0);
+                    }}
+                    className="text-gray-800 text-3xl font-playfair cursor-pointer"
+                  >
+                    {room.hotel.name}
+                  </p>
+
+                  <div className="flex items-center gap-1 text-gray-500 mt-2 text-sm">
+                    <img src={assets.locationIcon} alt="location-icon" />
+                    <span>{room.hotel.address}</span>
+                  </div>
+
+                  {/* Room Amenities */}
+                  <div className="flex flex-wrap items-center mt-3 mb-6 gap-4">
+                    {room.amenities.map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#F5F5FF]/70"
+                      >
+                        <img
+                          src={facilityIcons[item]}
+                          alt={item}
+                          className="w-5 h-5"
+                        />
+                        <p className="text-xs">{item}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Room Price per Night */}
+                  <p className="text-xl font-medium text-gray-700">
+                    ${room.pricePerNight * nights * guests} total ({guests} guest
+                    {guests > 1 ? "s" : ""} • {nights} night
+                    {nights > 1 ? "s" : ""})
+                  </p>
                 </div>
-
-                {/* Room Amenities */}
-                <div className="flex flex-wrap items-center mt-3 mb-6 gap-4">
-                  {room.amenities.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#F5F5FF]/70"
-                    >
-                      <img
-                        src={facilityIcons[item]}
-                        alt={item}
-                        className="w-5 h-5"
-                      />
-                      <p className="text-xs">{item}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Room Price per Night */}
-                <p className="text-xl font-medium text-gray-700">
-                  ${room.pricePerNight * nights * guests} total ({guests} guest
-                  {guests > 1 ? "s" : ""} • {nights} night
-                  {nights > 1 ? "s" : ""})
-                </p>
               </div>
-            </div>
-          ))
+            ))}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-8 mb-12">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+
+                {[...Array(totalPages)].map((_, index) => {
+                  const pageNumber = index + 1;
+                  // Show first page, last page, current page, and pages around current
+                  if (
+                    pageNumber === 1 ||
+                    pageNumber === totalPages ||
+                    (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={pageNumber}
+                        onClick={() => handlePageChange(pageNumber)}
+                        className={`px-4 py-2 border rounded-lg transition-all ${
+                          currentPage === pageNumber
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  } else if (
+                    pageNumber === currentPage - 2 ||
+                    pageNumber === currentPage + 2
+                  ) {
+                    return <span key={pageNumber}>...</span>;
+                  }
+                  return null;
+                })}
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
       {/* Filters */}
-
       <div className="w-80 p-6 border border-gray-300 rounded-lg shadow-md bg-white text-gray-600 max-lg:mb-8 min-lg:mt-16">
         <div
           className={`flex items-center justify-between px-5 py-2.5 min-lg:border-gray-300 ${openFilters && "border-b"

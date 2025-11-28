@@ -6,6 +6,8 @@ import axios from "axios";
 const AdminBookings = () => {
   const { getToken, currency } = useAppContext();
   const [bookings, setBookings] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
 
   const fetchBookings = useCallback(async () => {
     const token = await getToken();
@@ -18,21 +20,23 @@ const AdminBookings = () => {
     }
   }, [getToken]);
 
-  const deleteBooking = async (bookingId) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this booking?");
-    if (!confirmDelete) {
-      toast("Deletion cancelled", { icon: "❌" });
-      return;
-    }
+  const handleDeleteBooking = (booking) => {
+    setSelectedBooking(booking);
+    setShowDeleteModal(true);
+  };
 
+  const confirmDeleteBooking = async () => {
     const token = await getToken();
     try {
-      await axios.delete(`/api/admin/bookings/${bookingId}`, { headers: { Authorization: `Bearer ${token}` } });
-      setBookings((prev) => prev.filter(b => b._id !== bookingId));
+      await axios.delete(`/api/admin/bookings/${selectedBooking._id}`, { headers: { Authorization: `Bearer ${token}` } });
+      setBookings((prev) => prev.filter(b => b._id !== selectedBooking._id));
       toast.success("Booking deleted successfully");
     } catch (error) {
       toast.error("Error deleting booking");
       console.error(error);
+    } finally {
+      setShowDeleteModal(false);
+      setSelectedBooking(null);
     }
   };
 
@@ -73,7 +77,7 @@ const AdminBookings = () => {
                 </td>
                 <td className="px-6 py-4 text-center">
                   <button
-                    onClick={() => deleteBooking(b._id)}
+                    onClick={() => handleDeleteBooking(b)}
                     className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
                   >
                     Delete
@@ -84,6 +88,37 @@ const AdminBookings = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Modal de Confirmación de Eliminación */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-opacity-40 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-semibold mb-4 text-gray-800">Delete Booking</h3>
+            <p className="text-gray-600 mb-2">
+              Are you sure you want to delete this booking?
+            </p>
+            <div className="text-sm text-gray-500 mb-6 space-y-1">
+              <p><strong>User:</strong> {selectedBooking?.user?.username || "N/A"}</p>
+              <p><strong>Establishment:</strong> {selectedBooking?.hotel?.name || "N/A"}</p>
+              <p><strong>Total:</strong> {currency} {selectedBooking?.totalPrice}</p>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all text-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteBooking}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
