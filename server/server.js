@@ -21,14 +21,33 @@ const PORT = process.env.PORT || 3000;
 connectDB();
 connectCloudinary();
 
-const allowedOrigins = ["http://localhost:5173"];
-
 app.post("/api/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
 app.post("/api/clerk", express.raw({ type: "*/*" }), clerkWebhooks);
 
-app.use(cookieParser());
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({
+  origin: function (origin, callback) {
 
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      "http://localhost:5173",
+      "http://localhost:8081",
+      "http://192.168.100.22:8081",
+      "exp://192.168.100.22:8081"
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('exp://')) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
+app.use(cookieParser());
 app.use(express.json());
 app.use(clerkMiddleware());
 
@@ -46,5 +65,5 @@ syncUsers()
   .catch((err) => console.error("Error al sincronizar usuarios:", err));
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log('✅ Server on http://0.0.0.0:5000');
+  console.log(`✅ Local: http://localhost:${PORT}`);
 });

@@ -173,30 +173,22 @@ export const stripePayment = async (req, res) => {
         message: "Invalid booking price",
       });
     }
-
-    // 🕵 Detectar origen
     const origin = req.headers.origin;
-
-    console.log("🌍 ORIGIN DETECTADO:", origin);
 
     const baseUrl_web = process.env.FRONTEND_WEB || "http://localhost:5173";
     const baseUrl_native = process.env.FRONTEND_URL_NATIVE || "https://harmonious-stardust-f4e1ff.netlify.app/retorno.html";
 
-    // 🔍 Detectar si es web o móvil
-    let baseUrl = baseUrl_web; // default
+    let successUrl, cancelUrl;
 
-    if (origin) {
-      if (origin.includes("localhost:5173") || origin.includes("tudominio.com")) {
-        baseUrl = baseUrl_web;
-      } else {
-        baseUrl = baseUrl_native;
-      }
+    if (origin && (origin.includes("localhost:5173") )) {
+      successUrl = `${baseUrl_web}/loader/my-bookings`;
+      cancelUrl = `${baseUrl_web}/my-bookings`;
     } else {
-      // peticiones desde APP NO TIENEN origin → es móvil
-      baseUrl = baseUrl_native;
+      successUrl = baseUrl_native;
+      cancelUrl = baseUrl_native;
     }
 
-    console.log("🔗 BASE URL SELECCIONADA:", baseUrl);
+    console.log("✅ SUCCESS URL:", successUrl);
 
     const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -217,8 +209,8 @@ export const stripePayment = async (req, res) => {
     const session = await stripeInstance.checkout.sessions.create({
       line_items,
       mode: "payment",
-      success_url: `${baseUrl}/loader/my-bookings`,
-      cancel_url: `${baseUrl}/my-bookings`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       metadata: {
         bookingId: bookingId.toString(),
       },
@@ -239,14 +231,11 @@ export const stripePayment = async (req, res) => {
 };
 
 
-
-
 export const cancelBooking = async (req, res) => {
   try {
     const bookingId = req.params.id;
     const userId = req.user._id;
 
-    // Verificar si existe
     const booking = await Booking.findById(bookingId);
 
     if (!booking) {
@@ -256,27 +245,15 @@ export const cancelBooking = async (req, res) => {
       });
     }
 
-    // Verificar que pertenece al usuario
     if (booking.user.toString() !== userId.toString()) {
       return res.status(403).json({
         success: false,
         message: "You are not allowed to cancel this booking"
       });
     }
-
-    // Evitar cancelar si ya empezó el viaje
-    const today = new Date();
-    if (new Date(booking.checkInDate) <= today) {
-      return res.json({
-        success: false,
-        message: "Cannot cancel a booking that has already started"
-      });
-    }
-
-    // Eliminar la reserva
+    
     await Booking.findByIdAndDelete(bookingId);
 
-    // Opcional: enviar correo
     try {
       const roomData = await Room.findById(booking.room).populate("hotel");
 

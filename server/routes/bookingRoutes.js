@@ -20,4 +20,5 @@ bookingRouter.post('/stripe-payment', protect, stripePayment);
 bookingRouter.delete('/cancel/:id', protect, cancelBooking);
 
 
+
 export default bookingRouter;

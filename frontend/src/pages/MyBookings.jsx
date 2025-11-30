@@ -46,15 +46,8 @@ const MyBookings = () => {
     }
   };
 
-  const handleCancelBooking = async (bookingId, checkInDate) => {
-    // Verificar si la fecha de check-in ya pasó
-    const today = new Date();
-    if (new Date(checkInDate) <= today) {
-      toast.error("Cannot cancel a booking that has already started");
-      return;
-    }
-
-    setSelectedBooking({ id: bookingId, checkInDate });
+  const handleCancelBooking = async (bookingId) => {
+    setSelectedBooking({ id: bookingId });
     setShowCancelModal(true);
   };
 
@@ -168,9 +161,9 @@ const MyBookings = () => {
                   >
                     Pay Now
                   </button>
-                  {new Date(booking.checkInDate) > new Date() && (
+                  {(
                     <button
-                      onClick={() => handleCancelBooking(booking._id, booking.checkInDate)}
+                      onClick={() => handleCancelBooking(booking._id)}
                       className="px-4 py-1.5 text-xs border border-red-400 text-red-600 rounded-full hover:bg-red-50 transition-all cursor-pointer"
                     >
                       Cancel Booking
