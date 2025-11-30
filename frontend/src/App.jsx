@@ -2,7 +2,7 @@ import { React } from "react";
 import Navbar from "./components/Navbar";
 import { Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
-import Footer from "./components/footer";
+import Footer from "./components/Footer";
 import AllRooms from "./pages/AllRooms";
 import RoomDetails from "./pages/RoomDetails";
 import MyBookings from "./pages/MyBookings";
