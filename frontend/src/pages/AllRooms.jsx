@@ -5,7 +5,7 @@ import NoRooms from "../components/No-rooms";
 import { useAppContext } from "../hooks/useAppContext";
 import SearchBar from "../components/searchBar";
 
-const CheckBox = ({ label, selected = false, onChange = () => { } }) => {
+const CheckBox = ({ label, selected = false, onChange = () => {} }) => {
   return (
     <label className="flex gap-3 items-center cursor-pointer mt-2 text-sm">
       <input
@@ -17,7 +17,7 @@ const CheckBox = ({ label, selected = false, onChange = () => { } }) => {
     </label>
   );
 };
-const RadioButton = ({ label, selected = false, onChange = () => { } }) => {
+const RadioButton = ({ label, selected = false, onChange = () => {} }) => {
   return (
     <label className="flex gap-3 items-center cursor-pointer mt-2 text-sm">
       <input
@@ -45,11 +45,15 @@ const AllRooms = () => {
   const roomsPerPage = 5;
 
   const guests = Number(searchParams.get("guests") || 1);
-  const checkInStr = searchParams.get("checkIn");
-  const checkOutStr = searchParams.get("checkOut");
 
-  const checkIn = checkInStr ? new Date(checkInStr) : null;
-  const checkOut = checkOutStr ? new Date(checkOutStr) : null;
+  const parseDate = (str) => {
+    if (!str) return null;
+    const [year, month, day] = str.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  };
+
+  const checkIn = parseDate(searchParams.get("checkIn"));
+  const checkOut = parseDate(searchParams.get("checkOut"));
 
   // Calcular cantidad de noches
   let nights = 1;
@@ -94,49 +98,61 @@ const AllRooms = () => {
   };
 
   //Function to check if a room matches the selected room types
-  const matchesRoomType = useCallback((room) => {
-    return (
-      selectedFilters.roomType.length === 0 ||
-      selectedFilters.roomType.includes(room.roomType)
-    );
-  }, [selectedFilters.roomType]);
+  const matchesRoomType = useCallback(
+    (room) => {
+      return (
+        selectedFilters.roomType.length === 0 ||
+        selectedFilters.roomType.includes(room.roomType)
+      );
+    },
+    [selectedFilters.roomType]
+  );
 
   //Function to check if a room matches the selected price ranges
-  const matchesPriceRange = useCallback((room) => {
-    const totalPrice = room.pricePerNight * nights * guests;
+  const matchesPriceRange = useCallback(
+    (room) => {
+      const totalPrice = room.pricePerNight * nights * guests;
 
-    return (
-      selectedFilters.priceRange.length === 0 ||
-      selectedFilters.priceRange.some((range) => {
-        if (range.includes("+")) {
-          const min = Number(range.replace("+", ""));
-          return totalPrice >= min;
-        } else {
-          const [min, max] = range.split(" to ").map(Number);
-          return totalPrice >= min && totalPrice <= max;
-        }
-      })
-    );
-  }, [guests, nights, selectedFilters.priceRange]);
+      return (
+        selectedFilters.priceRange.length === 0 ||
+        selectedFilters.priceRange.some((range) => {
+          if (range.includes("+")) {
+            const min = Number(range.replace("+", ""));
+            return totalPrice >= min;
+          } else {
+            const [min, max] = range.split(" to ").map(Number);
+            return totalPrice >= min && totalPrice <= max;
+          }
+        })
+      );
+    },
+    [guests, nights, selectedFilters.priceRange]
+  );
 
   // Function to sort rooms based on the selected sort option
-  const sortRooms = useCallback((a, b) => {
-    if (selectedSort === "Price Low to High") {
-      return a.pricePerNight - b.pricePerNight;
-    } else if (selectedSort === "Price High to Low") {
-      return b.pricePerNight - a.pricePerNight;
-    } else if (selectedSort === "Newest First") {
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    }
-    return 0;
-  }, [selectedSort]);
+  const sortRooms = useCallback(
+    (a, b) => {
+      if (selectedSort === "Price Low to High") {
+        return a.pricePerNight - b.pricePerNight;
+      } else if (selectedSort === "Price High to Low") {
+        return b.pricePerNight - a.pricePerNight;
+      } else if (selectedSort === "Newest First") {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+      return 0;
+    },
+    [selectedSort]
+  );
 
   //Filter destination
-  const filterDestination = useCallback((room) => {
-    const destionation = searchParams.get("destination");
-    if (!destionation) return true;
-    return room.hotel.city.toLowerCase().includes(destionation.toLowerCase());
-  }, [searchParams]);
+  const filterDestination = useCallback(
+    (room) => {
+      const destionation = searchParams.get("destination");
+      if (!destionation) return true;
+      return room.hotel.city.toLowerCase().includes(destionation.toLowerCase());
+    },
+    [searchParams]
+  );
 
   // Filter and sort rooms based on the selected filters and sort option
   const filteredRooms = useMemo(() => {
@@ -166,7 +182,7 @@ const AllRooms = () => {
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -190,7 +206,9 @@ const AllRooms = () => {
         {/* Results count */}
         {filteredRooms.length > 0 && (
           <p className="text-sm text-gray-600 mt-4">
-            Showing {indexOfFirstRoom + 1}-{Math.min(indexOfLastRoom, filteredRooms.length)} of {filteredRooms.length} rooms
+            Showing {indexOfFirstRoom + 1}-
+            {Math.min(indexOfLastRoom, filteredRooms.length)} of{" "}
+            {filteredRooms.length} rooms
           </p>
         )}
 
@@ -258,7 +276,8 @@ const AllRooms = () => {
 
                   {/* Room Price per Night */}
                   <p className="text-xl font-medium text-gray-700">
-                    ${room.pricePerNight * nights * guests} total ({guests} guest
+                    ${room.pricePerNight * nights * guests} total ({guests}{" "}
+                    guest
                     {guests > 1 ? "s" : ""} • {nights} night
                     {nights > 1 ? "s" : ""})
                   </p>
@@ -283,7 +302,8 @@ const AllRooms = () => {
                   if (
                     pageNumber === 1 ||
                     pageNumber === totalPages ||
-                    (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                    (pageNumber >= currentPage - 1 &&
+                      pageNumber <= currentPage + 1)
                   ) {
                     return (
                       <button
@@ -291,8 +311,8 @@ const AllRooms = () => {
                         onClick={() => handlePageChange(pageNumber)}
                         className={`px-4 py-2 border rounded-lg transition-all ${
                           currentPage === pageNumber
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'border-gray-300 hover:bg-gray-50'
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "border-gray-300 hover:bg-gray-50"
                         }`}
                       >
                         {pageNumber}
@@ -323,8 +343,9 @@ const AllRooms = () => {
       {/* Filters */}
       <div className="w-80 p-6 border border-gray-300 rounded-lg shadow-md bg-white text-gray-600 max-lg:mb-8 min-lg:mt-16">
         <div
-          className={`flex items-center justify-between px-5 py-2.5 min-lg:border-gray-300 ${openFilters && "border-b"
-            }`}
+          className={`flex items-center justify-between px-5 py-2.5 min-lg:border-gray-300 ${
+            openFilters && "border-b"
+          }`}
         >
           <p className="text-base font-medium text-gray-800">FILTERS</p>
           <span
@@ -342,8 +363,9 @@ const AllRooms = () => {
         </div>
         {/* controles de filtro */}
         <div
-          className={`${openFilters ? "h-auto" : "h-0 lg:h-auto"
-            } overflow-hidden transition-all duration-700`}
+          className={`${
+            openFilters ? "h-auto" : "h-0 lg:h-auto"
+          } overflow-hidden transition-all duration-700`}
         >
           <div className="px-5 pt-5">
             <p className="font-medium text-gray-800 pb-2">Popular filters</p>

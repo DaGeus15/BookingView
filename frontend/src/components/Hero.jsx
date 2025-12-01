@@ -5,6 +5,14 @@ import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { useAppContext } from "../hooks/useAppContext";
 
+const formatDate = (date) => {
+  if (!date) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 const Hero = () => {
   const { navigate, getToken, axios, setSearchedCities } = useAppContext();
 
@@ -45,12 +53,8 @@ const Hero = () => {
     e.preventDefault();
 
     const { destination, guests } = form;
-    const checkIn = dateRange[0].startDate
-      ? dateRange[0].startDate.toISOString().split("T")[0]
-      : "";
-    const checkOut = dateRange[0].endDate
-      ? dateRange[0].endDate.toISOString().split("T")[0]
-      : "";
+    const checkIn = formatDate(dateRange[0].startDate);
+    const checkOut = formatDate(dateRange[0].endDate);
 
     navigate(
       `/rooms?destination=${destination}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`

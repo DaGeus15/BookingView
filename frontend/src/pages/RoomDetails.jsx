@@ -16,13 +16,15 @@ const RoomDetails = () => {
   const checkInStr = searchParams.get("checkIn");
   const checkOutStr = searchParams.get("checkOut");
 
-  const checkIn = checkInStr ? new Date(checkInStr) : null;
-  const checkOut = checkOutStr ? new Date(checkOutStr) : null;
+  const parseDate = (str) => {
+    if (!str) return null;
+    const [year, month, day] = str.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  };
 
-  const nights =
-    checkIn && checkOut
-      ? Math.ceil(Math.abs(checkOut - checkIn) / (1000 * 60 * 60 * 24))
-      : 1;
+  const checkIn = parseDate(checkInStr);
+  const checkOut = parseDate(checkOutStr);
+
   const { rooms, getToken, axios, navigate } = useAppContext();
   const [room, setRoom] = useState(null);
   const [mainImage, setMainImage] = useState(null);
@@ -32,6 +34,7 @@ const RoomDetails = () => {
   const [dateRange, setDateRange] = useState([
     { startDate: checkIn, endDate: checkOut, key: "selection" },
   ]);
+
   const [guestsState, setGuestsState] = useState(guests);
   const [showCalendar, setShowCalendar] = useState(false);
   const [error, setError] = useState("");
@@ -68,7 +71,7 @@ const RoomDetails = () => {
     const diffTime = Math.abs(endDate - startDate);
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
-
+  const nights = getDayDifference();
   // Check availability
   const checkAvailability = async () => {
     try {
@@ -134,8 +137,13 @@ const RoomDetails = () => {
         "/api/bookings/book",
         {
           room: id,
-          dateRange,
-          guests,
+          guests: guestsState,
+          dateRange: [
+            {
+              startDate: dateRange[0].startDate,
+              endDate: dateRange[0].endDate,
+            },
+          ],
           paymentMethod: "Pay At Hotel",
         },
         {
@@ -189,8 +197,9 @@ const RoomDetails = () => {
                 key={index}
                 src={image}
                 alt="Room Image"
-                className={`w-full rounded-xl shadow-md object-cover cursor-pointer ${mainImage === image && "outline-3 outline-orange-500"
-                  }`}
+                className={`w-full rounded-xl shadow-md object-cover cursor-pointer ${
+                  mainImage === image && "outline-3 outline-orange-500"
+                }`}
               />
             ))}
           </div>
